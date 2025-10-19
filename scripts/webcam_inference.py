@@ -22,14 +22,12 @@ def preprocess_frame(frame):
 
 def postprocess_keypoints(pred, original_size):
     pred = pred.reshape(NUM_KEYPOINTS, 3)
-    # xy = pred[:, :2].copy()
-    # xy[:, 0] *= original_size[0]
-    # xy[:, 1] *= original_size[1]
-    x = (pred[:, 0] / 320.0 * original_size[0]).astype(int)
-    y = (pred[:, 1] / 320.0 * original_size[1]).astype(int)
-    v = pred[:, 2] > 0
+    
+    x = (pred[:, 0] * original_size[0]).astype(int)
+    y = (pred[:, 1] * original_size[1]).astype(int)
+    v = pred[:, 2] > 0.5
+    
     return np.stack([x, y, v], axis=1)
-
 
 cap = cv2.VideoCapture(0)
 
@@ -42,14 +40,10 @@ while True:
     h, w, _ = frame.shape
     input_frame = preprocess_frame(frame)
     pred = model.predict(input_frame, verbose=0)
-    # print("Raw prediction shape:", pred.shape)
-    # print("Raw prediction values:", pred)
+    print(pred.shape)
+    print(pred[0])
     keypoints = postprocess_keypoints(pred[0], (w, h))
 
-    # v = pred[:, 2]
-    # for (x, y), vis in zip(keypoints, v):
-    #     # if vis > 0.5:  # threshold
-    #     cv2.circle(frame, (x, y), 3, (0, 255, 0), -1)
     for x, y, vis in keypoints:
         if vis:
             cv2.circle(frame, (x, y), 10, (0, 0, 255), -1)

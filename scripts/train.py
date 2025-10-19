@@ -1,6 +1,6 @@
 import os
 import random
-from models.basic_cnn import build_basic_cnn
+from models.basic_cnn import build_basic_cnn, build_mobilenet_keypoints, build_efficientnet_keypoint_model
 import tensorflow as tf
 from tensorflow.keras.callbacks import ModelCheckpoint, EarlyStopping, ReduceLROnPlateau
 import matplotlib.pyplot as plt
@@ -22,8 +22,8 @@ train_annotations = load_annotations(os.path.join(TRAIN_DIR, "anno_training.pick
 val_annotations = load_annotations(os.path.join(EVAL_DIR, "anno_evaluation.pickle"))
 
 # Use only a subset for faster iteration
-TRAIN_SUBSET_SIZE = 100
-VAL_SUBSET_SIZE = 20
+TRAIN_SUBSET_SIZE = 200
+VAL_SUBSET_SIZE = 50
 
 train_keys = list(train_annotations.keys())
 val_keys = list(val_annotations.keys())
@@ -80,7 +80,7 @@ def xy_v_mse(y_true, y_pred, v_weight=0.1):
 
     return xy_loss + v_weight * v_loss
 
-def xy_v_mae(y_true, y_pred, v_weight=0.1):
+def xy_v_mae(y_true, y_pred, v_weight=0.05):
     y_true = tf.reshape(y_true, (tf.shape(y_true)[0], 42, 3))
     y_pred = tf.reshape(y_pred, (tf.shape(y_pred)[0], 42, 3))
 
@@ -95,18 +95,18 @@ def xy_v_mae(y_true, y_pred, v_weight=0.1):
     return xy_loss + v_weight * v_loss
 
 # Build model
-model = build_basic_cnn(input_shape=INPUT_SHAPE, num_keypoints=NUM_KEYPOINTS)
+model = build_efficientnet_keypoint_model(input_shape=INPUT_SHAPE, num_keypoints=NUM_KEYPOINTS)
 model.compile(
-    optimizer=tf.keras.optimizers.Adam(learning_rate=1e-4),
+    optimizer=tf.keras.optimizers.Adam(learning_rate=1e-5),
     loss=xy_v_mse,
     metrics=[xy_v_mae]
 )
 
 # Train
-weights_path = os.path.join(checkpoint_dir, 'best_weights.weights.h5')
-if os.path.exists(weights_path):
-    model.load_weights(weights_path)
-    print("Loaded best weights from previous training")
+# weights_path = os.path.join(checkpoint_dir, 'best_weights.weights.h5')
+# if os.path.exists(weights_path):
+#     model.load_weights(weights_path)
+#     print("Loaded best weights from previous training")
 
 history = model.fit(
     train_gen,
