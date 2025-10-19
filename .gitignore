@@ -10,8 +10,7 @@ venv/
 .DS_Store
 
 dataset/
-models/
-checkpoints/
+models/checkpoints/
 *.h5
 *.keras
 
