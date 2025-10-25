@@ -9,7 +9,7 @@ venv/
 .vscode/
 .DS_Store
 
-dataset/
+datasets/
 models/checkpoints/
 *.h5
 *.keras

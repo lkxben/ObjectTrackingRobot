@@ -1,33 +1,43 @@
-import os
-import pickle
 import cv2
+import os
 import numpy as np
 
+def visualize_yolo_pose_numbered_large(image_path, label_path, scale=2):
+    img = cv2.imread(image_path)
+    h, w, _ = img.shape
+
+    # Scale up image
+    img = cv2.resize(img, (w*scale, h*scale))
+    
+    with open(label_path, 'r') as f:
+        line = f.readline().strip().split()
+
+    class_id = int(line[0])
+    x_c, y_c, box_w, box_h = map(float, line[1:5])
+    kpt_data = list(map(float, line[5:]))
+
+    # convert normalized bbox to pixels (scaled)
+    x1 = int((x_c - box_w/2) * w * scale)
+    y1 = int((y_c - box_h/2) * h * scale)
+    x2 = int((x_c + box_w/2) * w * scale)
+    y2 = int((y_c + box_h/2) * h * scale)
+
+    cv2.rectangle(img, (x1, y1), (x2, y2), (0, 255, 0), 2)
+
+    for i in range(21):
+        kx = int(kpt_data[i*3] * w * scale)
+        ky = int(kpt_data[i*3 + 1] * h * scale)
+        v = kpt_data[i*3 + 2]
+        if v > 0:
+            cv2.circle(img, (kx, ky), 4*scale//2, (0, 0, 255), -1)
+            cv2.putText(img, str(i), (kx+5, ky-5), cv2.FONT_HERSHEY_SIMPLEX, 0.8*scale/2, (255, 255, 0), 2)
+
+    cv2.imshow("YOLO-Pose Annotation", img)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
+
+
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-IMAGE_DIR = os.path.join(BASE_DIR, "../dataset/training/color")
-ANNOTATION_FILE = os.path.join(BASE_DIR, "../dataset/training/anno_training.pickle")
-
-# Load annotations
-with open(ANNOTATION_FILE, "rb") as f:
-    annotations = pickle.load(f)
-
-# Pick a sample image
-sample_idx = "00010"  # change as needed
-image_path = os.path.join(IMAGE_DIR, f"{sample_idx}.png")
-image = cv2.imread(image_path)
-
-keypoints = annotations[int(sample_idx)]["uv_vis"]
-h, w, _ = image.shape
-
-# Map normalized keypoints to pixel coordinates
-x = (np.array(keypoints)[:,0]).astype(int)
-y = (np.array(keypoints)[:,1]).astype(int)
-v = np.array(keypoints)[:,2] > 0.5
-
-# Draw keypoints
-for xi, yi, vi in zip(x, y, v):
-    cv2.circle(image, (xi, yi), 3, (0,0,255), -1)
-
-cv2.imshow("Ground Truth Keypoints", image)
-cv2.waitKey(0)
-cv2.destroyAllWindows()
+image_path = os.path.join(BASE_DIR, "../datasets/friehand/images/train/00000011.jpg")
+label_path = os.path.join(BASE_DIR, "../datasets/friehand/labels/train/00000011.txt")
+visualize_yolo_pose_numbered_large(image_path, label_path, scale=10)
