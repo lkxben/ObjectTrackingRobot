@@ -14,7 +14,9 @@ class HandPoseNode(Node):
             self.image_callback,
             10
         )
-        self.publisher_ = self.create_publisher(Float32MultiArray, '/hand/pose', 10)
+        self.pose_pub = self.create_publisher(Float32MultiArray, '/hand/pose', 10)
+        self.box_pub = self.create_publisher(Float32MultiArray, '/hand/box', 10)
+
         self.bridge = CvBridge()
         self.model = YOLO("weights/best.pt")
 
@@ -24,18 +26,30 @@ class HandPoseNode(Node):
         
         results = self.model.predict(source=frame, imgsz=320, conf=0.5, verbose=False)
 
+        best_conf = -1
+        best_kpts = None
+        best_box = None
+
         for result in results:
             if result.keypoints is None or result.keypoints.data.shape[0] == 0:
-                continue  # No detection
+                continue
+
             confs = result.keypoints.conf
             avg_conf = confs.mean().item()
+
             if avg_conf > best_conf:
                 best_conf = avg_conf
                 best_kpts = result.keypoints.data[0].cpu().numpy()
+                if result.boxes is not None and result.boxes.data.shape[0] > 0:
+                    best_box = result.boxes.xyxy[0].cpu().numpy()
 
         if best_kpts is not None:
-            msg_out = Float32MultiArray(data=best_kpts)
-            self.publisher_.publish(msg_out)
+            msg_out = Float32MultiArray(data=best_kpts.flatten().tolist())
+            self.pose_pub.publish(msg_out)
+
+        if best_box is not None:
+            box_msg = Float32MultiArray(data=best_box.tolist())
+            self.box_pub.publish(box_msg)
 
 def main(args=None):
     rclpy.init(args=args)

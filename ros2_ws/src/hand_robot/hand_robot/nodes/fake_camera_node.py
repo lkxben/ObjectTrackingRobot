@@ -1,6 +1,7 @@
 import rclpy
 from rclpy.node import Node
 from sensor_msgs.msg import Image
+from std_msgs.msg import Float32MultiArray
 from cv_bridge import CvBridge
 import cv2
 import os
@@ -11,9 +12,14 @@ class FakeCameraNode(Node):
         self.publisher_ = self.create_publisher(Image, '/camera/image_raw', 10)
         self.bridge = CvBridge()
 
-        # Path to your test image
         image_path = os.path.join(os.path.dirname(__file__), 'hand_br.png')
         self.img = cv2.imread(image_path)
+
+        self.info_pub = self.create_publisher(Float32MultiArray, '/camera/info', 10)
+        if self.img is not None:
+            height, width, _ = self.img.shape
+            msg = Float32MultiArray(data=[width, height])
+            self.info_pub.publish(msg)
 
         self.timer = self.create_timer(1.0 / 30.0, self.timer_callback)  # 30 FPS
 

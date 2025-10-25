@@ -12,5 +12,10 @@ def generate_launch_description():
             package='hand_robot',
             executable='hand_pose_node',
             name='hand_pose_node'
+        ),
+        Node(
+            package='hand_robot',
+            executable='tracking_node',
+            name='tracking_node'
         )
     ])

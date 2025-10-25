@@ -18,6 +18,7 @@ setup(
             'hand_pose_node = hand_robot.nodes.hand_pose_node:main',
             'camera_node = hand_robot.nodes.camera_node:main',
             'fake_camera_node = hand_robot.nodes.fake_camera_node:main',
+            'tracking_node = hand_robot.nodes.tracking_node:main'
         ],
     }, data_files=[
         ('share/ament_index/resource_index/packages',
