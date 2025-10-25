@@ -1,0 +1,8 @@
+services:
+  ros2:
+    build: .
+    container_name: hand_robot
+    volumes:
+      - ./src:/root/ros2_ws/src
+    tty: true
+    stdin_open: true
