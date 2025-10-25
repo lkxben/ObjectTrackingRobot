@@ -4,9 +4,18 @@ __pycache__/
 *.pyd
 *.log
 
+# ROS2
+build/
+install/
+log/
+
+# Docker
+*.env
+
 venv/
 .venv/
 .vscode/
 .DS_Store
 
 .env
+weights/
