@@ -18,10 +18,10 @@ class HandPoseNode(Node):
         self.box_pub = self.create_publisher(Float32MultiArray, '/hand/box', 10)
 
         self.bridge = CvBridge()
-        self.model = YOLO("weights/best.pt")
+        self.model = YOLO("weights/no-fh.pt")
 
     def image_callback(self, msg):
-        self.get_logger().info('Received image frame')
+        # self.get_logger().info('Received image frame')
         frame = self.bridge.imgmsg_to_cv2(msg)
         
         results = self.model.predict(source=frame, imgsz=320, conf=0.5, verbose=False)

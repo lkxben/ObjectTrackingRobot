@@ -5,8 +5,8 @@ def generate_launch_description():
     return LaunchDescription([
         Node(
             package='hand_robot',
-            executable='fake_camera_node',
-            name='fake_camera_node'
+            executable='stream_to_image_node',
+            name='stream_to_image_node'
         ),
         Node(
             package='hand_robot',
