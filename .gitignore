@@ -19,3 +19,7 @@ venv/
 
 .env
 weights/
+datasets/
+models/checkpoints/
+*.h5
+*.keras
