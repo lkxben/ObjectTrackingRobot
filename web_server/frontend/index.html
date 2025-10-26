@@ -34,11 +34,30 @@ ws.onopen = () => statusEl.textContent = 'Connected';
 ws.onclose = () => statusEl.textContent = 'Disconnected';
 ws.onerror = (err) => console.error('WebSocket error', err);
 
+let oldBlobUrl = null;
+
 ws.onmessage = (event) => {
   try {
     const payload = JSON.parse(event.data);
     if (payload.type === 'image' && payload.data) {
-      imgEl.src = `data:image/jpeg;base64,${payload.data}`;
+      // Convert base64 to Uint8Array
+      const byteCharacters = atob(payload.data);
+      const byteNumbers = new Array(byteCharacters.length);
+      for (let i = 0; i < byteCharacters.length; i++) {
+        byteNumbers[i] = byteCharacters.charCodeAt(i);
+      }
+      const byteArray = new Uint8Array(byteNumbers);
+
+      // Create a Blob and Object URL
+      const blob = new Blob([byteArray], { type: 'image/jpeg' });
+      const blobUrl = URL.createObjectURL(blob);
+
+      // Set image source and revoke old URL
+      imgEl.src = blobUrl;
+      if (oldBlobUrl) {
+        URL.revokeObjectURL(oldBlobUrl);
+      }
+      oldBlobUrl = blobUrl;
     }
   } catch (e) {
     console.error('Failed to parse message', e);

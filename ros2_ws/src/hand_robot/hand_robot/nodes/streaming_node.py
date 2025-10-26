@@ -49,7 +49,9 @@ class StreamingNode(Node):
     def image_callback(self, msg):
         try:
             frame = self.bridge.imgmsg_to_cv2(msg, desired_encoding='bgr8')
-            _, jpeg = cv2.imencode('.jpg', frame)
+            frame = cv2.resize(frame, (320, 180))
+            _, jpeg = cv2.imencode('.jpg', frame, [int(cv2.IMWRITE_JPEG_QUALITY), 50])
+            # _, jpeg = cv2.imencode('.jpg', frame)
             b64_frame = base64.b64encode(jpeg.tobytes()).decode('utf-8')
 
             payload = {
