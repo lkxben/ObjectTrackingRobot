@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Robot Live Stream</title>
+<style>
+    body { text-align: center; font-family: sans-serif; background: #111; color: #eee; }
+    img {
+        width: 80vw;
+        max-width: 100%;
+        height: auto;
+        border: 2px solid #555;
+        border-radius: 6px;
+        margin-top: 20px;
+        }
+    #status { margin-top: 10px; font-size: 1.1em; }
+</style>
+</head>
+<body>
+<h1>Robot Camera</h1>
+<div style="text-align:center;">
+  <img id="stream" src="" alt="Waiting for stream..." />
+</div>
+<div id="status">Connecting...</div>
+
+<script>
+const imgEl = document.getElementById('stream');
+const statusEl = document.getElementById('status');
+
+const ws = new WebSocket(`ws://${location.host}`);
+
+ws.onopen = () => statusEl.textContent = 'Connected';
+ws.onclose = () => statusEl.textContent = 'Disconnected';
+ws.onerror = (err) => console.error('WebSocket error', err);
+
+ws.onmessage = (event) => {
+  try {
+    const payload = JSON.parse(event.data);
+    if (payload.type === 'image' && payload.data) {
+      imgEl.src = `data:image/jpeg;base64,${payload.data}`;
+    }
+  } catch (e) {
+    console.error('Failed to parse message', e);
+  }
+};
+</script>
+</body>
+</html>

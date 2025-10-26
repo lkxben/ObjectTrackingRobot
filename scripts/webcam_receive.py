@@ -1,8 +1,12 @@
 import cv2
 import requests
 import numpy as np
+from dotenv import load_dotenv
+import os
 
-url = 'http://127.0.0.1:5002/video'
+load_dotenv()
+
+url = os.environ.get("CAMERA_URL", "http://127.0.0.1:5002/video")
 
 stream = requests.get(url, stream=True)
 bytes_data = b''

@@ -20,6 +20,4 @@ def video_feed():
                     mimetype='multipart/x-mixed-replace; boundary=frame')
 
 if __name__ == '__main__':
-    print("Streaming on http://127.0.0.1:5002/video")
-    print("Streaming on local LAN IP too, e.g., http://192.168.0.124:5002/video")
     app.run(host='0.0.0.0', port=5002)
