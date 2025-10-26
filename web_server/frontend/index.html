@@ -27,7 +27,8 @@
 const imgEl = document.getElementById('stream');
 const statusEl = document.getElementById('status');
 
-const ws = new WebSocket(`ws://${location.host}`);
+const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
+const ws = new WebSocket(`${protocol}//${location.host}`);
 
 ws.onopen = () => statusEl.textContent = 'Connected';
 ws.onclose = () => statusEl.textContent = 'Disconnected';

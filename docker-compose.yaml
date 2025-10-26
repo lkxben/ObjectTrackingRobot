@@ -5,8 +5,7 @@ services:
     volumes:
       - ./ros2_ws/src:/root/ros2_ws/src
       - ./weights:/root/ros2_ws/weights
+      - ./.env:/root/ros2_ws/.env:ro
     working_dir: /root/ros2_ws
     tty: true
     stdin_open: true
-    env_file:
-      - .env
