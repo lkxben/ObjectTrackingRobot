@@ -39,7 +39,7 @@ ros.on('close', () => statusEl.textContent = 'Connection closed');
 
 const imageTopic = new ROSLIB.Topic({
   ros: ros,
-  name: '/camera/raw_images',
+  name: '/camera/image_raw',
   messageType: 'sensor_msgs/Image'
 });
 
