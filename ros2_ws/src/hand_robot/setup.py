@@ -19,6 +19,7 @@ setup(
             'hand_pose_node = hand_robot.nodes.hand_pose_node:main',
             'streaming_node = hand_robot.nodes.streaming_node:main',
             'tracking_node = hand_robot.nodes.tracking_node:main',
+            'prompt_cv_node = hand_robot.nodes.prompt_cv_node:main'
         ],
     }, data_files=[
         ('share/ament_index/resource_index/packages',

@@ -8,6 +8,7 @@ import websocket
 import json
 import base64
 import os
+import time
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -16,11 +17,16 @@ local_host = os.environ.get("LOCAL_HOST", "127.0.0.1")
 port = os.environ.get("WEBSOCKET_PORT", 8080)
 ws_url = os.environ.get("WS_URL", f'ws://{local_host}:{port}')
 
+FPS = 30
+
 class StreamingNode(Node):
     def __init__(self):
         super().__init__('streaming_image_node')
         self.get_logger().info('Started streaming node')
         self.bridge = CvBridge()
+        self.lastest_box = None
+        self.last_send_time = 0.0
+
         self.box_sub = self.create_subscription(
             Float32MultiArray,
             '/hand/box',
@@ -47,6 +53,11 @@ class StreamingNode(Node):
         self.latest_box = msg.data
 
     def image_callback(self, msg):
+        current_time = time.time()
+        if current_time - self.last_send_time < 1.0 / FPS:
+            return
+
+        self.last_send_time = current_time
         try:
             frame = self.bridge.imgmsg_to_cv2(msg, desired_encoding='bgr8')
             frame = cv2.resize(frame, (320, 180))

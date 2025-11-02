@@ -15,6 +15,11 @@ def generate_launch_description():
         ),
         Node(
             package='hand_robot',
+            executable='prompt_cv_node',
+            name='prompt_cv_node'
+        ),
+        Node(
+            package='hand_robot',
             executable='tracking_node',
             name='tracking_node'
         ),
