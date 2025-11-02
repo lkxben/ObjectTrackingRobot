@@ -21,7 +21,7 @@ class PromptCVNode(Node):
         self.bridge = CvBridge()
         self.model = YOLOE("yoloe-11s-seg.pt")
         self.model.set_classes(prompts, self.model.get_text_pe(prompts))
-        self.get_logger().info('Setup done')
+        self.get_logger().info('Set up Prompt CV Node')
 
     def image_callback(self, msg):
         # self.get_logger().info('Received image frame')

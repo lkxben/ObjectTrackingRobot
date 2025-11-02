@@ -27,5 +27,12 @@ def generate_launch_description():
             package='hand_robot',
             executable='streaming_node',
             name='streaming_node'
+        ),
+        Node(
+            package='rosbridge_server',
+            executable='rosbridge_websocket',
+            name='rosbridge_websocket',
+            output='screen',
+            parameters=[{'port': 9090}]
         )
     ])

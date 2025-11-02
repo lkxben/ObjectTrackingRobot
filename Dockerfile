@@ -5,7 +5,7 @@ SHELL ["/bin/bash", "-c"]
 # Install system dependencies including python3-pip
 RUN apt-get update && apt-get install -y \
     python3-pip python3-opencv git vim curl python3-colcon-common-extensions python3-rosdep \
-    ros-humble-cv-bridge \
+    ros-humble-cv-bridge ros-humble-rosbridge-server \
     && rm -rf /var/lib/apt/lists/*
 
 # Upgrade pip and install Python packages

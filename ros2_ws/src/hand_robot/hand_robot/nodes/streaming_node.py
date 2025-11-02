@@ -13,6 +13,8 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+## CAN POTENTIALLY BE DELETED SINCE USING ROS BRIDGE
+
 local_host = os.environ.get("LOCAL_HOST", "127.0.0.1")
 port = os.environ.get("WEBSOCKET_PORT", 8080)
 ws_url = os.environ.get("WS_URL", f'ws://{local_host}:{port}')

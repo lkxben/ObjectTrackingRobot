@@ -15,6 +15,7 @@
         }
     #status { margin-top: 10px; font-size: 1.1em; }
 </style>
+<script src="https://cdn.jsdelivr.net/npm/roslib/build/roslib.min.js"></script>
 </head>
 <body>
 <h1>Robot Camera</h1>
@@ -27,42 +28,28 @@
 const imgEl = document.getElementById('stream');
 const statusEl = document.getElementById('status');
 
-const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
-const ws = new WebSocket(`${protocol}//${location.host}`);
+const rosbridgeUrl = process.env.ROSBRIDGE_URL || 'ws://localhost:9090';
+const ros = new ROSLIB.Ros({
+  url: rosbridgeUrl
+});
 
-ws.onopen = () => statusEl.textContent = 'Connected';
-ws.onclose = () => statusEl.textContent = 'Disconnected';
-ws.onerror = (err) => console.error('WebSocket error', err);
+ros.on('connection', () => statusEl.textContent = 'Connected to ROS');
+ros.on('error', (err) => statusEl.textContent = 'Error connecting');
+ros.on('close', () => statusEl.textContent = 'Connection closed');
 
-let oldBlobUrl = null;
+const imageTopic = new ROSLIB.Topic({
+  ros: ros,
+  name: '/camera/raw_images',
+  messageType: 'sensor_msgs/Image'
+});
 
-ws.onmessage = (event) => {
-  try {
-    const payload = JSON.parse(event.data);
-    if (payload.type === 'image' && payload.data) {
-      // Convert base64 to Uint8Array
-      const byteCharacters = atob(payload.data);
-      const byteNumbers = new Array(byteCharacters.length);
-      for (let i = 0; i < byteCharacters.length; i++) {
-        byteNumbers[i] = byteCharacters.charCodeAt(i);
-      }
-      const byteArray = new Uint8Array(byteNumbers);
+imageTopic.subscribe((msg) => {
+  if (!msg.data) return;
 
-      // Create a Blob and Object URL
-      const blob = new Blob([byteArray], { type: 'image/jpeg' });
-      const blobUrl = URL.createObjectURL(blob);
-
-      // Set image source and revoke old URL
-      imgEl.src = blobUrl;
-      if (oldBlobUrl) {
-        URL.revokeObjectURL(oldBlobUrl);
-      }
-      oldBlobUrl = blobUrl;
-    }
-  } catch (e) {
-    console.error('Failed to parse message', e);
-  }
-};
+  // Convert ROS base64 to image
+  const imgSrc = 'data:image/jpeg;base64,' + msg.data;
+  imgEl.src = imgSrc;
+});
 </script>
 </body>
 </html>
