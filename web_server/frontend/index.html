@@ -28,7 +28,7 @@
 const imgEl = document.getElementById('stream');
 const statusEl = document.getElementById('status');
 
-const rosbridgeUrl = "{{ROSBRIDGE_URL}}" || 'ws://localhost:9090';
+const rosbridgeUrl = "ws://192.168.0.144:9090"
 const ros = new ROSLIB.Ros({
   url: rosbridgeUrl
 });
