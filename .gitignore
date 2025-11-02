@@ -4,6 +4,9 @@ __pycache__/
 *.pyd
 *.log
 
+# Server
+web_server/backend/node_modules/
+
 # ROS2
 build/
 install/
