@@ -23,11 +23,11 @@ def generate_launch_description():
             executable='tracking_node',
             name='tracking_node'
         ),
-        # Node(
-        #     package='hand_robot',
-        #     executable='streaming_node',
-        #     name='streaming_node'
-        # ),
+        Node(
+            package='hand_robot',
+            executable='annotated_publisher',
+            name='annotated_publisher'
+        ),
         Node(
             package='rosbridge_server',
             executable='rosbridge_websocket',

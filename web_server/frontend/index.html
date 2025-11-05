@@ -39,16 +39,13 @@ ros.on('close', () => statusEl.textContent = 'Connection closed');
 
 const imageTopic = new ROSLIB.Topic({
   ros: ros,
-  name: '/camera/image_raw',
-  messageType: 'sensor_msgs/Image'
+  name: '/camera/annotated/compressed',
+  messageType: 'sensor_msgs/CompressedImage'
 });
 
 imageTopic.subscribe((msg) => {
   if (!msg.data) return;
-
-  // Convert ROS base64 to image
-  const imgSrc = 'data:image/jpeg;base64,' + msg.data;
-  imgEl.src = imgSrc;
+  imgEl.src = 'data:image/jpeg;base64,' + msg.data;
 });
 </script>
 </body>

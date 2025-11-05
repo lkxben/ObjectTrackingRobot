@@ -17,7 +17,7 @@ setup(
         'console_scripts': [
             'stream_to_image_node = hand_robot.nodes.stream_to_image_node:main',
             'hand_pose_node = hand_robot.nodes.hand_pose_node:main',
-            'streaming_node = hand_robot.nodes.streaming_node:main',
+            'annotated_publisher = hand_robot.nodes.annotated_publisher:main',
             'tracking_node = hand_robot.nodes.tracking_node:main',
             'prompt_cv_node = hand_robot.nodes.prompt_cv_node:main'
         ],
