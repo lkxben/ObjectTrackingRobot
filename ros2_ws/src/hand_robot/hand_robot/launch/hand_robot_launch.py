@@ -23,16 +23,16 @@ def generate_launch_description():
             executable='tracking_node',
             name='tracking_node'
         ),
-        Node(
-            package='hand_robot',
-            executable='streaming_node',
-            name='streaming_node'
-        ),
+        # Node(
+        #     package='hand_robot',
+        #     executable='streaming_node',
+        #     name='streaming_node'
+        # ),
         Node(
             package='rosbridge_server',
             executable='rosbridge_websocket',
             name='rosbridge_websocket',
             output='screen',
-            parameters=[{'port': 9090, 'address': '0.0.0.0'}]
+            parameters=[{'port': 9090, 'address': '0.0.0.0', 'allow_origin': '*'}]
         )
     ])
