@@ -5,7 +5,7 @@ from std_msgs.msg import Float32MultiArray
 from cv_bridge import CvBridge
 from ultralytics import YOLOE
 
-prompts = ["person"]
+prompts = ["blue", "bottle"]
 
 class PromptCVNode(Node):
     def __init__(self):

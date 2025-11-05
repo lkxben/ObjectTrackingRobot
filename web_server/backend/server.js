@@ -1,6 +1,6 @@
-const express = require('express');
-const path = require('path');
-const WebSocket = require('ws');
+import express from 'express';
+import path from 'path';
+import WebSocket from 'ws';
 
 const app = express();
 const PORT = process.env.WEBSOCKET_PORT || 8080;

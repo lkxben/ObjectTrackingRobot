@@ -6,7 +6,8 @@ import os
 
 load_dotenv()
 
-url = os.environ.get("CAMERA_URL", "http://127.0.0.1:5002/video")
+# url = os.environ.get("CAMERA_URL", "http://127.0.0.1:5002/video")
+url = "http://172.31.25.230:5002/video"
 
 stream = requests.get(url, stream=True)
 bytes_data = b''
