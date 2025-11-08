@@ -18,7 +18,7 @@ class PromptCVNode(Node):
         self.box_pub = self.create_publisher(Float32MultiArray, '/prompt/box', 10)
 
         self.bridge = CvBridge()
-        self.prompts = ["bottle", "blue"]
+        self.prompts = ["person"]
         self.model = YOLOE("yoloe-11s-seg.pt")
         self.model.set_classes(self.prompts, self.model.get_text_pe(self.prompts))
         self.get_logger().info('Prompt CV Setup - Complete')

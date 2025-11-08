@@ -22,7 +22,8 @@
 <div>
   <img id="stream" src="" alt="Waiting for stream..." />
 </div>
-<div id="status">Connecting...</div>
+<div id="backendStatus">Backend: Connecting...</div>
+<div id="rosStatus">Local ROS: Unknown</div>
 <div style="margin-top:20px;">
   <input type="text" id="promptInput" placeholder="Enter prompts, comma-separated" style="width:300px;">
   <button id="sendPrompt">Send Prompt</button>
@@ -30,15 +31,28 @@
 
 <script>
 const imgEl = document.getElementById('stream');
-const statusEl = document.getElementById('status');
+const backendStatusEl = document.getElementById('backendStatus');
+const rosStatusEl = document.getElementById('rosStatus');
 const promptInput = document.getElementById('promptInput');
 const sendPromptBtn = document.getElementById('sendPrompt');
 
 const ros = new ROSLIB.Ros({ url: 'wss://handguesturerobot.onrender.com/rosbridge?client=frontend' });
 
-ros.on('connection', () => { statusEl.textContent = 'Connected to ROS' });
-ros.on('error', (err) => statusEl.textContent = 'Error connecting');
-ros.on('close', () => statusEl.textContent = 'Connection closed');
+let localRosOnline = false;
+function updateRosStatus() {
+    rosStatusEl.textContent = localRosOnline ? 'Local ROS: Online' : 'Local ROS: Offline';
+}
+let lastImageTime = Date.now();
+setInterval(() => {
+    if (Date.now() - lastImageTime > 5000) {
+        localRosOnline = false;
+        updateStatus();
+    }
+}, 1000);
+
+ros.on('connection', () => { backendStatusEl.textContent = 'Backend: Connected' });
+ros.on('error', () => { backendStatusEl.textContent = 'Backend: Error connecting' });
+ros.on('close', () => { backendStatusEl.textContent = 'Backend: Disconnected' });
 
 const cameraTopic = new ROSLIB.Topic({
   ros: ros,
@@ -47,7 +61,14 @@ const cameraTopic = new ROSLIB.Topic({
 });
 
 cameraTopic.subscribe((msg) => {
+  lastImageTime = Date.now();
   if (!msg.data) return;
+
+  if (!localRosOnline) {
+    localRosOnline = true;
+    updateStatus();
+  }
+
   imgEl.src = 'data:image/jpeg;base64,' + msg.data;
 });
 
