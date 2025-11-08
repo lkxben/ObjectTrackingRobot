@@ -1,13 +1,22 @@
 import express from 'express';
 import { WebSocketServer } from 'ws';
 import http from 'http';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 const server = http.createServer(app);
+app.use(express.static(path.join(__dirname, '../frontend')));
 
-const wss = new WebSocketServer({ server, path: '/rosbridge' });
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, '../frontend', 'index.html'));
+});
 
 // For frontend
+const wss = new WebSocketServer({ server, path: '/rosbridge' });
 let rosbridgeSocket = null;
 
 wss.on('connection', (ws) => {
