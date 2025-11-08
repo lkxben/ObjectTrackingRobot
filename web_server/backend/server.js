@@ -28,14 +28,9 @@ wss.on('connection', (ws, request) => {
 
     ws.on('message', msg => {
         console.log('Forwarding message type:', typeof msg)
+        const forwardMsg = msg instanceof Buffer ? msg.toString() : msg
         for (const client of frontends) {
-            if (client.readyState === client.OPEN) {
-                if (typeof msg === 'string') {
-                    client.send(msg)
-                } else {
-                    client.send(msg, { binary: true })
-                }
-            }
+            if (client.readyState === client.OPEN) client.send(forwardMsg)
         }
     })
     ws.on('close', () => {
