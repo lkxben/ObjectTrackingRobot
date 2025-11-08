@@ -1,11 +1,11 @@
 import express from 'express';
-import WebSocket from 'ws';
+import { WebSocketServer } from 'ws';
 import http from 'http';
 
 const app = express();
 const server = http.createServer(app);
 
-const wss = new WebSocket.Server({ server, path: '/rosbridge' });
+const wss = new WebSocketServer({ server, path: '/rosbridge' });
 
 // For frontend
 let rosbridgeSocket = null;
@@ -14,7 +14,7 @@ wss.on('connection', (ws) => {
     console.log('Frontend connected');
 
     ws.on('message', (msg) => {
-        if (rosbridgeSocket && rosbridgeSocket.readyState === WebSocket.OPEN) {
+        if (rosbridgeSocket && rosbridgeSocket.readyState === ws.OPEN) {
             rosbridgeSocket.send(msg);
         }
     });
@@ -25,7 +25,7 @@ wss.on('connection', (ws) => {
 });
 
 // For local rosbridge
-const rosbridgeWss = new WebSocket.Server({ noServer: true });
+const rosbridgeWss = new WebSocketServer({ noServer: true });
 
 server.on('upgrade', (request, socket, head) => {
     if (request.url === '/localrosbridge') {
@@ -35,7 +35,7 @@ server.on('upgrade', (request, socket, head) => {
 
             ws.on('message', (msg) => {
                 wss.clients.forEach((client) => {
-                    if (client.readyState === WebSocket.OPEN) {
+                    if (client.readyState === client.OPEN) {
                         client.send(msg);
                     }
                 });
