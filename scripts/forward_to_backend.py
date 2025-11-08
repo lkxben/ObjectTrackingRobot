@@ -12,14 +12,24 @@ def forward_ros_to_backend():
     ws_backend = websocket.WebSocket()
     ws_backend.connect(BACKEND_WSS)
 
+    sub_msg = {
+        "op": "subscribe",
+        "topic": "/camera/annotated/compressed",
+        "type": "sensor_msgs/CompressedImage",
+        "throttle_rate": 0
+    }
+    ws_local.send(json.dumps(sub_msg))
+
     def receive_local():
         while True:
             msg = ws_local.recv()
+            print(msg)
             ws_backend.send(msg)
 
     def receive_backend():
         while True:
             msg = ws_backend.recv()
+            print(msg)
             ws_local.send(msg)
 
     threading.Thread(target=receive_local).start()

@@ -27,8 +27,16 @@ wss.on('connection', (ws, request) => {
     console.log('Local ROSBridge connected')
 
     ws.on('message', msg => {
-      for (const client of frontends)
-        if (client.readyState === client.OPEN) client.send(msg)
+        console.log('Forwarding message type:', typeof msg)
+        for (const client of frontends) {
+            if (client.readyState === client.OPEN) {
+                if (typeof msg === 'string') {
+                    client.send(msg)
+                } else {
+                    client.send(msg, { binary: true })
+                }
+            }
+        }
     })
     ws.on('close', () => {
       console.log('Local ROSBridge disconnected')
