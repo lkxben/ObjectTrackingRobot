@@ -23,10 +23,16 @@
   <img id="stream" src="" alt="Waiting for stream..." />
 </div>
 <div id="status">Connecting...</div>
+<div style="margin-top:20px;">
+  <input type="text" id="promptInput" placeholder="Enter prompts, comma-separated" style="width:300px;">
+  <button id="sendPrompt">Send Prompt</button>
+</div>
 
 <script>
 const imgEl = document.getElementById('stream');
 const statusEl = document.getElementById('status');
+const promptInput = document.getElementById('promptInput');
+const sendPromptBtn = document.getElementById('sendPrompt');
 
 const rosbridgeUrl = 'wss://intermeasurable-unbearably-sondra.ngrok-free.dev'
 const ros = new ROSLIB.Ros({ url: rosbridgeUrl });
@@ -45,6 +51,17 @@ cameraTopic.subscribe((msg) => {
   if (!msg.data) return;
   imgEl.src = 'data:image/jpeg;base64,' + msg.data;
 });
+
+const promptTopic = new ROSLIB.Topic({
+    ros: ros,
+    name: '/prompt/input',
+    messageType: 'std_msgs/String'
+});
+
+sendPromptBtn.onclick = () => {
+    const msg = new ROSLIB.Message({ data: promptInput.value });
+    promptTopic.publish(msg);
+};
 </script>
 </body>
 </html>

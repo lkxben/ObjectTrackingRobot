@@ -8,7 +8,6 @@ import cv2
 class AnnotatedPublisher(Node):
     def __init__(self):
         super().__init__('annotated_publisher')
-        self.get_logger().info('Started AnnotatedPublisher node')
 
         self.bridge = CvBridge()
         self.latest_boxes = None

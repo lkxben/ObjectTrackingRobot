@@ -5,11 +5,10 @@ from std_msgs.msg import Float32MultiArray
 from cv_bridge import CvBridge
 from ultralytics import YOLOE
 
-prompts = ["blue", "bottle"]
-
 class PromptCVNode(Node):
     def __init__(self):
         super().__init__('prompt_cv_node')
+        self.get_logger().info('Prompt CV Setup - Started')
         self.subscription = self.create_subscription(
             Image,
             '/camera/image_raw',
@@ -19,9 +18,15 @@ class PromptCVNode(Node):
         self.box_pub = self.create_publisher(Float32MultiArray, '/prompt/box', 10)
 
         self.bridge = CvBridge()
+        self.prompts = ["blue", "bottle"]
         self.model = YOLOE("yoloe-11s-seg.pt")
-        self.model.set_classes(prompts, self.model.get_text_pe(prompts))
-        self.get_logger().info('Set up Prompt CV Node')
+        self.model.set_classes(self.prompts, self.model.get_text_pe(self.prompts))
+        self.get_logger().info('Prompt CV Setup - Complete')
+
+    def prompt_callback(self, msg):
+        self.prompts = msg.data.split(",")
+        self.model.set_classes(self.prompts, self.model.get_text_pe(self.prompts))
+        self.get_logger().info(f"Updated prompts: {self.prompts}")
 
     def image_callback(self, msg):
         # self.get_logger().info('Received image frame')
