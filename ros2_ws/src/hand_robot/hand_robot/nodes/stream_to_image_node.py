@@ -16,8 +16,8 @@ class StreamToImageNode(Node):
         self.info_pub = self.create_publisher(Float32MultiArray, '/camera/info', 10)
         self.bridge = CvBridge()
 
-        # stream_url = os.environ.get("STREAM_URL")
-        stream_url = "http://192.168.0.144:5002/video"
+        stream_url = os.environ.get("STREAM_URL")
+        # stream_url = "http://192.168.0.144:5002/video"
         self.cap = cv2.VideoCapture(stream_url)
 
         if not self.cap.isOpened():

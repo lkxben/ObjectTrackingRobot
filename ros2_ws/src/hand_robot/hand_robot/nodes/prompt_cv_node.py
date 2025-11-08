@@ -18,7 +18,7 @@ class PromptCVNode(Node):
         self.box_pub = self.create_publisher(Float32MultiArray, '/prompt/box', 10)
 
         self.bridge = CvBridge()
-        self.prompts = ["blue", "bottle"]
+        self.prompts = ["bottle", "blue"]
         self.model = YOLOE("yoloe-11s-seg.pt")
         self.model.set_classes(self.prompts, self.model.get_text_pe(self.prompts))
         self.get_logger().info('Prompt CV Setup - Complete')
@@ -41,9 +41,9 @@ class PromptCVNode(Node):
             
             center_x = (box[0] + box[2]) / 2
             center_y = (box[1] + box[3]) / 2
-            self.get_logger().info(f"Published box center: ({center_x:.1f}, {center_y:.1f})")
-        else:
-            self.get_logger().info("No objects detected")
+        #     self.get_logger().info(f"Published box center: ({center_x:.1f}, {center_y:.1f})")
+        # else:
+        #     self.get_logger().info("No objects detected")
 
 def main(args=None):
     rclpy.init(args=args)

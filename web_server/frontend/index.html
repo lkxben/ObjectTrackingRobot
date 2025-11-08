@@ -34,8 +34,7 @@ const statusEl = document.getElementById('status');
 const promptInput = document.getElementById('promptInput');
 const sendPromptBtn = document.getElementById('sendPrompt');
 
-const rosbridgeUrl = 'wss://intermeasurable-unbearably-sondra.ngrok-free.dev'
-const ros = new ROSLIB.Ros({ url: rosbridgeUrl });
+const ros = new ROSLIB.Ros({ url: 'wss://handguesturerobot.onrender.com/rosbridge' });
 
 ros.on('connection', () => statusEl.textContent = 'Connected to ROS');
 ros.on('error', (err) => statusEl.textContent = 'Error connecting');

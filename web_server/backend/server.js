@@ -1,31 +1,55 @@
 import express from 'express';
-import path from 'path';
-import { fileURLToPath } from 'url';
 import WebSocket from 'ws';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+import http from 'http';
 
 const app = express();
-const PORT = process.env.WEBSOCKET_PORT || 8080;
+const server = http.createServer(app);
 
-app.use(express.static(path.join(__dirname, '../frontend')));
+const wss = new WebSocket.Server({ server, path: '/rosbridge' });
 
-const server = app.listen(PORT, () => {
-    console.log(`HTTP server running on port ${PORT}`);
+// For frontend
+let rosbridgeSocket = null;
+
+wss.on('connection', (ws) => {
+    console.log('Frontend connected');
+
+    ws.on('message', (msg) => {
+        if (rosbridgeSocket && rosbridgeSocket.readyState === WebSocket.OPEN) {
+            rosbridgeSocket.send(msg);
+        }
+    });
+
+    ws.on('close', () => {
+        console.log('Frontend disconnected');
+    });
 });
 
-// // WebSocket setup
-// const wss = new WebSocket.Server({ server });
+// For local rosbridge
+const rosbridgeWss = new WebSocket.Server({ noServer: true });
 
-// wss.on('connection', (ws) => {
-//     console.log('WebSocket client connected');
-//     ws.on('message', (message) => {
-//         const msgStr = message.toString();
-//         for (const client of wss.clients) {
-//             if (client.readyState === WebSocket.OPEN) {
-//                 client.send(msgStr);
-//             }
-//         }
-//     });
-// });
+server.on('upgrade', (request, socket, head) => {
+    if (request.url === '/localrosbridge') {
+        rosbridgeWss.handleUpgrade(request, socket, head, (ws) => {
+            rosbridgeSocket = ws;
+            console.log('Local ROSBridge connected');
+
+            ws.on('message', (msg) => {
+                wss.clients.forEach((client) => {
+                    if (client.readyState === WebSocket.OPEN) {
+                        client.send(msg);
+                    }
+                });
+            });
+
+            ws.on('close', () => {
+                console.log('Local ROSBridge disconnected');
+                rosbridgeSocket = null;
+            });
+        });
+    } else {
+        socket.destroy();
+    }
+});
+
+const PORT = process.env.PORT || 443;
+server.listen(PORT, () => console.log(`Server running on port ${PORT}`));

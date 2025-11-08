@@ -3,9 +3,12 @@ from rclpy.node import Node
 from std_msgs.msg import Float32MultiArray
 import socket
 import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 ESP32_IP = os.environ.get("ESP32_IP")
-ESP32_PORT = os.environ.get("ESP32_PORT") 
+ESP32_PORT = int(os.environ.get("ESP32_PORT"))
 
 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 SERVO_CENTER = 90
