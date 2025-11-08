@@ -44,7 +44,6 @@ wss.on('connection', (ws, request) => {
             if (rosbridgeSocket && rosbridgeSocket.readyState === rosbridgeSocket.OPEN) {
                 const forwardMsg = msg instanceof Buffer ? msg.toString() : msg;
                 rosbridgeSocket.send(forwardMsg);
-                console.log('Forwarded message to local ROSBridge:', forwardMsg);
             }
         })
         ws.on('close', () => {

@@ -81,7 +81,6 @@ const promptTopic = new ROSLIB.Topic({
 sendPromptBtn.onclick = () => {
   const msg = new ROSLIB.Message({ data: promptInput.value });
   promptTopic.publish(msg);
-  console.log('Published prompt:', promptInput.value);
 };
 </script>
 </body>
