@@ -4,7 +4,6 @@ from sensor_msgs.msg import Image, CompressedImage
 from std_msgs.msg import Float32MultiArray
 from cv_bridge import CvBridge
 import cv2
-from message_filters import Subscriber, ApproximateTimeSynchronizer
 
 class AnnotatedPublisher(Node):
     def __init__(self):
@@ -12,46 +11,48 @@ class AnnotatedPublisher(Node):
         self.get_logger().info('Started AnnotatedPublisher node')
 
         self.bridge = CvBridge()
+        self.latest_boxes = None
 
-        self.image_sub = Subscriber(self, Image, '/camera/image_raw')
-        self.box_sub = Subscriber(self, Float32MultiArray, '/prompt/box')
-
-        self.ts = ApproximateTimeSynchronizer(
-            [self.image_sub, self.box_sub],
-            queue_size=10,
-            slop=0.05,
-            allow_headerless=True
+        self.image_sub = self.create_subscription(
+            Image,
+            '/camera/image_raw',
+            self.image_callback,
+            10
         )
-        self.ts.registerCallback(self.synced_callback)
+
+        self.box_sub = self.create_subscription(
+            Float32MultiArray,
+            '/prompt/box',
+            self.box_callback,
+            10
+        )
 
         self.pub = self.create_publisher(CompressedImage, '/camera/annotated/compressed', 10)
 
-    def synced_callback(self, img_msg, box_msg):
+    def box_callback(self, msg):
+        if msg.data and len(msg.data) == 4:
+            self.latest_boxes = msg.data
+        else:
+            self.latest_boxes = None
+
+    def image_callback(self, img_msg):
         try:
-            # Convert ROS Image to OpenCV frame
             frame = self.bridge.imgmsg_to_cv2(img_msg, desired_encoding='bgr8')
 
-            # Draw bounding box if it exists
-            if box_msg.data and len(box_msg.data) == 4:
-                x, y, w, h = box_msg.data
+            if self.latest_boxes:
+                x, y, w, h = self.latest_boxes
                 cv2.rectangle(frame,
                               (int(x), int(y)),
                               (int(x + w), int(y + h)),
                               (0, 255, 0),
                               2)
 
-            # Resize frame for smoother streaming
             frame = cv2.resize(frame, (320, 180))
-
-            # Convert to compressed image
-            compressed_msg = self.bridge.cv2_to_compressed_imgmsg(frame, encoding='jpeg')
-
-            # Always publish, even if no box
+            compressed_msg = self.bridge.cv2_to_compressed_imgmsg(frame, dst_format='jpeg')
             self.pub.publish(compressed_msg)
 
         except Exception as e:
             self.get_logger().error(f'Error processing annotated frame: {e}')
-
 
 def main(args=None):
     rclpy.init(args=args)
