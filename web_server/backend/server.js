@@ -16,10 +16,10 @@ app.get('/', (req, res) => {
 });
 
 // For frontend
-const wss = new WebSocketServer({ server, path: '/rosbridge' });
+const wssFrontend = new WebSocketServer({ server, path: '/rosbridge' });
 let rosbridgeSocket = null;
 
-wss.on('connection', (ws) => {
+wssFrontend.on('connection', (ws) => {
     console.log('Frontend connected');
 
     ws.on('message', (msg) => {
@@ -34,9 +34,9 @@ wss.on('connection', (ws) => {
 });
 
 // For local rosbridge
-const rosbridgeWss = new WebSocketServer({ noServer: true });
+const rosbridgeWss = new WebSocketServer({ server, path: '/localrosbridge' });
 
-server.on('upgrade', (request, socket, head) => {
+rosbridgeWss.on('upgrade', (request, socket, head) => {
     if (request.url === '/localrosbridge') {
         rosbridgeWss.handleUpgrade(request, socket, head, (ws) => {
             rosbridgeSocket = ws;

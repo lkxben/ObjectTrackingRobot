@@ -2,7 +2,7 @@ import websocket
 import threading
 
 LOCAL_ROSBRIDGE = "ws://localhost:9090"
-BACKEND_WSS = "wss://handguesturerobot.onrender.com/rosbridge"
+BACKEND_WSS = "wss://handguesturerobot.onrender.com/localrosbridge"
 
 def forward_ros_to_backend():
     ws_local = websocket.WebSocket()
