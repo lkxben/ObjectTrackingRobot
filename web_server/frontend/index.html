@@ -23,10 +23,12 @@
   <img id="stream" src="" alt="Waiting for stream..." />
 </div>
 <div id="status">Connecting...</div>
+<pre id="data"></pre>
 
 <script>
 const imgEl = document.getElementById('stream');
 const statusEl = document.getElementById('status');
+const dataEl = document.getElementById('data');
 
 const rosbridgeUrl = 'wss://intermeasurable-unbearably-sondra.ngrok-free.dev'
 const ros = new ROSLIB.Ros({
@@ -37,15 +39,14 @@ ros.on('connection', () => statusEl.textContent = 'Connected to ROS');
 ros.on('error', (err) => statusEl.textContent = 'Error connecting');
 ros.on('close', () => statusEl.textContent = 'Connection closed');
 
-const imageTopic = new ROSLIB.Topic({
+const infoTopic = new ROSLIB.Topic({
   ros: ros,
-  name: '/camera/annotated/compressed',
-  messageType: 'sensor_msgs/CompressedImage'
+  name: '/camera/info',
+  messageType: 'std_msgs/msg/Float32MultiArray'
 });
 
-imageTopic.subscribe((msg) => {
-  if (!msg.data) return;
-  imgEl.src = 'data:image/jpeg;base64,' + msg.data;
+infoTopic.subscribe((msg) => {
+  dataEl.textContent = JSON.stringify(msg.data, null, 2);
 });
 </script>
 </body>

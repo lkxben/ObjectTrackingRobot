@@ -14,12 +14,13 @@ class AnnotatedPublisher(Node):
         self.bridge = CvBridge()
 
         self.image_sub = Subscriber(self, Image, '/camera/image_raw')
-        self.box_sub = Subscriber(self, Float32MultiArray, '/hand/box')
+        self.box_sub = Subscriber(self, Float32MultiArray, '/prompt/box')
 
         self.ts = ApproximateTimeSynchronizer(
             [self.image_sub, self.box_sub],
             queue_size=10,
-            slop=0.05
+            slop=0.05,
+            allow_headerless=True
         )
         self.ts.registerCallback(self.synced_callback)
 
@@ -27,8 +28,10 @@ class AnnotatedPublisher(Node):
 
     def synced_callback(self, img_msg, box_msg):
         try:
+            # Convert ROS Image to OpenCV frame
             frame = self.bridge.imgmsg_to_cv2(img_msg, desired_encoding='bgr8')
 
+            # Draw bounding box if it exists
             if box_msg.data and len(box_msg.data) == 4:
                 x, y, w, h = box_msg.data
                 cv2.rectangle(frame,
@@ -37,10 +40,13 @@ class AnnotatedPublisher(Node):
                               (0, 255, 0),
                               2)
 
+            # Resize frame for smoother streaming
             frame = cv2.resize(frame, (320, 180))
 
+            # Convert to compressed image
             compressed_msg = self.bridge.cv2_to_compressed_imgmsg(frame, encoding='jpeg')
 
+            # Always publish, even if no box
             self.pub.publish(compressed_msg)
 
         except Exception as e:

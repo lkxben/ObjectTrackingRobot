@@ -17,7 +17,7 @@ class StreamToImageNode(Node):
         self.bridge = CvBridge()
 
         # stream_url = os.environ.get("STREAM_URL")
-        stream_url = "http://10.110.105.109:5002/video"
+        stream_url = "http://192.168.0.144:5002/video"
         self.cap = cv2.VideoCapture(stream_url)
 
         if not self.cap.isOpened():
