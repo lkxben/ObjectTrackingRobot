@@ -10,7 +10,7 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const server = http.createServer(app);
 app.use(express.static(path.join(__dirname, '../frontend/build')));
-app.get('/*', (req, res) => {
+app.get((req, res) => {
     res.sendFile(path.join(__dirname, '../frontend/build', 'index.html'));
 });
 
