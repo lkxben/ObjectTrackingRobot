@@ -28,7 +28,6 @@ def ros_to_backend():
     def receive_backend():
         while True:
             msg = ws_backend.recv()
-            print(msg)
             ws_local.send(msg)
 
     threading.Thread(target=receive_local).start()
