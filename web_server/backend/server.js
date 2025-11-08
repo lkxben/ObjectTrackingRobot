@@ -18,39 +18,38 @@ const wss = new WebSocketServer({ server, path: '/rosbridge' });
 let rosbridgeSocket = null;
 const frontends = new Set()
 
-wss.on('connection', (ws) => {
-    ws.once('message', msg => {
-        let data
-        try { data = JSON.parse(msg) } catch { return }
+wss.on('connection', (ws, request) => {
+  const url = new URL(request.url, `http://${request.headers.host}`)
+  const clientType = url.searchParams.get('client')
 
-        if (data.type === 'rosbridge') {
-            rosbridgeSocket = ws
-            console.log('Local ROSBridge connected')
+  if (clientType === 'localrosbridge') {
+    rosbridgeSocket = ws
+    console.log('Local ROSBridge connected')
 
-            ws.on('message', msg => {
-                for (const client of frontends)
-                    if (client.readyState === client.OPEN) client.send(msg)
-            })
-            ws.on('close', () => {
-                console.log('Local ROSBridge disconnected')
-                rosbridgeSocket = null
-            })
-        }
-
-        if (data.type === 'frontend') {
-            frontends.add(ws)
-            console.log('Frontend connected')
-
-            ws.on('message', msg => {
-                if (rosbridgeSocket && rosbridgeSocket.readyState === rosbridgeSocket.OPEN)
-                rosbridgeSocket.send(msg)
-            })
-            ws.on('close', () => {
-                console.log('Frontend disconnected')
-                frontends.delete(ws)
-            })
-        }
+    ws.on('message', msg => {
+      for (const client of frontends)
+        if (client.readyState === client.OPEN) client.send(msg)
     })
+    ws.on('close', () => {
+      console.log('Local ROSBridge disconnected')
+      rosbridgeSocket = null
+    })
+  } else if (clientType === 'frontend') {
+    frontends.add(ws)
+    console.log('Frontend connected')
+
+    ws.on('message', msg => {
+      if (rosbridgeSocket && rosbridgeSocket.readyState === rosbridgeSocket.OPEN)
+        rosbridgeSocket.send(msg)
+    })
+    ws.on('close', () => {
+      console.log('Frontend disconnected')
+      frontends.delete(ws)
+    })
+  } else {
+    console.log('Unknown client tried to connect, closing')
+    ws.close()
+  }
 });
 
 const PORT = process.env.PORT || 443;

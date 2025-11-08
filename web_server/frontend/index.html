@@ -34,7 +34,7 @@ const statusEl = document.getElementById('status');
 const promptInput = document.getElementById('promptInput');
 const sendPromptBtn = document.getElementById('sendPrompt');
 
-const ros = new ROSLIB.Ros({ url: 'wss://handguesturerobot.onrender.com/rosbridge' });
+const ros = new ROSLIB.Ros({ url: 'wss://handguesturerobot.onrender.com/rosbridge?client=frontend' });
 
 ros.on('connection', () => {
   ros.send(JSON.stringify({ type: 'frontend' }));
