@@ -46,7 +46,7 @@ let lastImageTime = Date.now();
 setInterval(() => {
     if (Date.now() - lastImageTime > 5000) {
         localRosOnline = false;
-        updateStatus();
+        updateRosStatus();
     }
 }, 1000);
 
@@ -66,21 +66,22 @@ cameraTopic.subscribe((msg) => {
 
   if (!localRosOnline) {
     localRosOnline = true;
-    updateStatus();
+    updateRosStatus();
   }
 
   imgEl.src = 'data:image/jpeg;base64,' + msg.data;
 });
 
 const promptTopic = new ROSLIB.Topic({
-    ros: ros,
-    name: '/prompt/input',
-    messageType: 'std_msgs/String'
+  ros: ros,
+  name: '/prompt/input',
+  messageType: 'std_msgs/String'
 });
 
 sendPromptBtn.onclick = () => {
-    const msg = new ROSLIB.Message({ data: promptInput.value });
-    promptTopic.publish(msg);
+  const msg = new ROSLIB.Message({ data: promptInput.value });
+  promptTopic.publish(msg);
+  console.log('Published prompt:', promptInput.value);
 };
 </script>
 </body>

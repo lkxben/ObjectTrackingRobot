@@ -19,40 +19,42 @@ let rosbridgeSocket = null;
 const frontends = new Set()
 
 wss.on('connection', (ws, request) => {
-  const url = new URL(request.url, `http://${request.headers.host}`)
-  const clientType = url.searchParams.get('client')
+    const url = new URL(request.url, `http://${request.headers.host}`)
+    const clientType = url.searchParams.get('client')
 
-  if (clientType === 'localrosbridge') {
-    rosbridgeSocket = ws
-    console.log('Local ROSBridge connected')
+    if (clientType === 'localrosbridge') {
+        rosbridgeSocket = ws
+        console.log('Local ROSBridge connected')
 
-    ws.on('message', msg => {
-        console.log('Forwarding message type:', typeof msg)
-        const forwardMsg = msg instanceof Buffer ? msg.toString() : msg
-        for (const client of frontends) {
-            if (client.readyState === client.OPEN) client.send(forwardMsg)
-        }
-    })
-    ws.on('close', () => {
-      console.log('Local ROSBridge disconnected')
-      rosbridgeSocket = null
-    })
-  } else if (clientType === 'frontend') {
-    frontends.add(ws)
-    console.log('Frontend connected')
+        ws.on('message', msg => {
+            const forwardMsg = msg instanceof Buffer ? msg.toString() : msg
+            for (const client of frontends) {
+                if (client.readyState === client.OPEN) client.send(forwardMsg)
+            }
+        })
+        ws.on('close', () => {
+            console.log('Local ROSBridge disconnected')
+            rosbridgeSocket = null
+        })
+    } else if (clientType === 'frontend') {
+        frontends.add(ws)
+        console.log('Frontend connected')
 
-    ws.on('message', msg => {
-      if (rosbridgeSocket && rosbridgeSocket.readyState === rosbridgeSocket.OPEN)
-        rosbridgeSocket.send(msg)
-    })
-    ws.on('close', () => {
-      console.log('Frontend disconnected')
-      frontends.delete(ws)
-    })
-  } else {
-    console.log('Unknown client tried to connect, closing')
-    ws.close()
-  }
+        ws.on('message', msg => {
+            if (rosbridgeSocket && rosbridgeSocket.readyState === rosbridgeSocket.OPEN) {
+                const forwardMsg = msg instanceof Buffer ? msg.toString() : msg;
+                rosbridgeSocket.send(forwardMsg);
+                console.log('Forwarded message to local ROSBridge:', forwardMsg);
+            }
+        })
+        ws.on('close', () => {
+            console.log('Frontend disconnected')
+            frontends.delete(ws)
+        })
+    } else {
+        console.log('Unknown client tried to connect, closing')
+        ws.close()
+    } 
 });
 
 const PORT = process.env.PORT || 443;

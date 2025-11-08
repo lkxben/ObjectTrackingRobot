@@ -1,7 +1,7 @@
 import rclpy
 from rclpy.node import Node
 from sensor_msgs.msg import Image
-from std_msgs.msg import Float32MultiArray
+from std_msgs.msg import Float32MultiArray, String
 from cv_bridge import CvBridge
 from ultralytics import YOLOE
 
@@ -9,10 +9,16 @@ class PromptCVNode(Node):
     def __init__(self):
         super().__init__('prompt_cv_node')
         self.get_logger().info('Prompt CV Setup - Started')
-        self.subscription = self.create_subscription(
+        self.image_sub = self.create_subscription(
             Image,
             '/camera/image_raw',
             self.image_callback,
+            10
+        )
+        self.prompt_sub = self.create_subscription(
+            String,
+            '/prompt/input',
+            self.prompt_callbacks,
             10
         )
         self.box_pub = self.create_publisher(Float32MultiArray, '/prompt/box', 10)
@@ -23,7 +29,7 @@ class PromptCVNode(Node):
         self.model.set_classes(self.prompts, self.model.get_text_pe(self.prompts))
         self.get_logger().info('Prompt CV Setup - Complete')
 
-    def prompt_callback(self, msg):
+    def prompt_callbacks(self, msg):
         self.prompts = msg.data.split(",")
         self.model.set_classes(self.prompts, self.model.get_text_pe(self.prompts))
         self.get_logger().info(f"Updated prompts: {self.prompts}")
