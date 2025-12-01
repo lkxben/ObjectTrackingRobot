@@ -4,6 +4,7 @@ from sensor_msgs.msg import Image
 from std_msgs.msg import Float32MultiArray, String
 from cv_bridge import CvBridge
 from ultralytics import YOLOE
+from robot_msgs.msg import Detection, DetectionArray
 
 class PromptCVNode(Node):
     def __init__(self):
