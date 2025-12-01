@@ -18,7 +18,8 @@ setup(
             'stream_to_image_node = robot.nodes.stream_to_image_node:main',
             'annotated_publisher = robot.nodes.annotated_publisher:main',
             'tracking_node = robot.nodes.tracking_node:main',
-            'prompt_cv_node = robot.nodes.prompt_cv_node:main'
+            'prompt_cv_node = robot.nodes.prompt_cv_node:main',
+            'bytetrack_node = robot.nodes.bytetrack_node:main'
         ],
     }, data_files=[
         ('share/ament_index/resource_index/packages',

@@ -4,6 +4,7 @@ from std_msgs.msg import Float32MultiArray
 import socket
 import os
 from dotenv import load_dotenv
+from robot_msgs.msg import DetectionArray
 
 load_dotenv()
 
@@ -25,14 +26,14 @@ class TrackingNode(Node):
         super().__init__('tracking_node')
         self.subscription = self.create_subscription(
             Float32MultiArray,
-            '/prompt/box',
+            '/detection',
             self.callback,
             10
         )
         self.resolution = (640, 480) 
         self.create_subscription(Float32MultiArray, '/camera/info', self.info_callback, 10)
-        # self.motor_pub = self.create_publisher(Float32MultiArray, '/motor/cmd', 10)
         self.max_angle = 90.0
+        self.get_logger().info('Tracking Node Setup - Complete')
 
     def info_callback(self, msg):
         self.resolution = (msg.data[0], msg.data[1])
@@ -65,8 +66,6 @@ class TrackingNode(Node):
         delta_angle_x = delta_angle_x if abs(delta_angle_x) > DEADZONE else 0
 
         udpmsg = f"{delta_angle_x},{delta_angle_y}"
-        # msg_out = Float32MultiArray(data=[angle_x, angle_y])
-        # self.motor_pub.publish(msg_out)
         try:
             sock.sendto(udpmsg.encode(), (ESP32_IP, ESP32_PORT))
             # self.get_logger().info(f"Sent UDP message: {udpmsg} to {ESP32_IP}:{ESP32_PORT}")

@@ -24,6 +24,11 @@ def generate_launch_description():
             name='annotated_publisher'
         ),
         Node(
+            package='robot',
+            executable='bytetrack_node',
+            name='bytetrack_node'
+        ),
+        Node(
             package='rosbridge_server',
             executable='rosbridge_websocket',
             name='rosbridge_websocket',

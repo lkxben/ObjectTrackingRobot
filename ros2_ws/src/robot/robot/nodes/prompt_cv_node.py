@@ -9,7 +9,6 @@ from robot_msgs.msg import Detection, DetectionArray
 class PromptCVNode(Node):
     def __init__(self):
         super().__init__('prompt_cv_node')
-        self.get_logger().info('Prompt CV Setup - Started')
         self.image_sub = self.create_subscription(
             Image,
             '/camera/image_raw',
@@ -22,35 +21,62 @@ class PromptCVNode(Node):
             self.prompt_callbacks,
             10
         )
-        self.box_pub = self.create_publisher(Float32MultiArray, '/prompt/box', 10)
+        self.det_pub = self.create_publisher(DetectionArray, '/detection', 10)
 
         self.bridge = CvBridge()
-        self.prompts = ["person"]
-        self.model = YOLOE("yoloe-11s-seg.pt")
-        self.model.set_classes(self.prompts, self.model.get_text_pe(self.prompts))
+        self.model_pf = YOLOE("yoloe-11s-seg-pf.pt")
+        self.model_prompt = YOLOE("yoloe-11s-seg.pt")
+        self.model = self.model_pf
+        self.prompts = None
+        _ = self.model_prompt.get_text_pe(["warmup"])
+
         self.get_logger().info('Prompt CV Setup - Complete')
 
     def prompt_callbacks(self, msg):
-        self.prompts = msg.data.split(",")
-        self.model.set_classes(self.prompts, self.model.get_text_pe(self.prompts))
-        self.get_logger().info(f"Updated prompts: {self.prompts}")
+        if msg.data.strip():  # non-empty string
+            self.prompts = msg.data.split(",")
+            self.model = self.model_prompt
+            self.model.set_classes(self.prompts, self.model_prompt.get_text_pe(self.prompts))
+            self.get_logger().info(f"Prompt mode: detecting {self.prompts}")
+        else:  # empty string
+            self.prompts = None
+            self.model = self.model_pf
+            self.get_logger().info("All mode: detecting all classes")
 
     def image_callback(self, msg):
-        # self.get_logger().info('Received image frame')
         frame = self.bridge.imgmsg_to_cv2(msg)
-        
-        results = self.model.predict(source=frame, imgsz=320, conf=0.2, verbose=False)
 
-        if len(results[0].boxes) > 0:
-            box = results[0].boxes.xyxy[0].cpu().numpy()
-            box_msg = Float32MultiArray(data=box.tolist())
-            self.box_pub.publish(box_msg)
+        results = self.model.predict(source=frame, imgsz=320, conf=0.35, verbose=False)
+        detections_msg = DetectionArray()
+
+        boxes = results[0].boxes
+        if len(boxes) == 0:
+            self.det_pub.publish(detections_msg)
+            return
+
+        xyxy = boxes.xyxy.cpu().numpy()
+        confs = boxes.conf.cpu().numpy()
+        class_ids = boxes.cls.cpu().numpy()
+
+        for i in range(len(boxes)):
+            x1, y1, x2, y2 = xyxy[i]
+            conf = float(confs[i])
+            class_id = int(class_ids[i])
+            class_name = results[0].names[class_id]
+
+            det = Detection()
+            det.x1 = float(x1)
+            det.y1 = float(y1)
+            det.x2 = float(x2)
+            det.y2 = float(y2)
+            det.confidence = conf
+            det.class_name = class_name
+            det.class_id = class_id
+
+            detections_msg.detections.append(det)
             
-            center_x = (box[0] + box[2]) / 2
-            center_y = (box[1] + box[3]) / 2
-        #     self.get_logger().info(f"Published box center: ({center_x:.1f}, {center_y:.1f})")
-        # else:
-        #     self.get_logger().info("No objects detected")
+        self.det_pub.publish(detections_msg)
+        self.get_logger().info(str(detections_msg))
 
 def main(args=None):
     rclpy.init(args=args)
