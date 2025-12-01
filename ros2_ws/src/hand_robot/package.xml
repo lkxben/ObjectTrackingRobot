@@ -2,7 +2,7 @@
 <package format="3">
   <name>hand_robot</name>
   <version>0.0.1</version>
-  <description>Hand tracking robot ROS 2 package</description>
+  <description>Object tracking robot ROS 2 package</description>
   <maintainer email="lkxben@gmail.com">Ben</maintainer>
   <license>MIT</license>
 
