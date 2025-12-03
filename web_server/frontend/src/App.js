@@ -6,29 +6,50 @@ function App() {
   const [backendStatus, setBackendStatus] = useState('Connecting...');
   const [rosStatus, setRosStatus] = useState('Unknown');
   const [prompt, setPrompt] = useState('');
+  const [trackId, setTrackId] = useState('');
+  const [showTrackBox, setShowTrackBox] = useState(false);
   const [fps, setFps] = useState(0);
+  const [trackingStatus, setTrackingStatus] = useState('');
   const imgRef = useRef(null);
   const lastImageTimeRef = useRef(Date.now());
   const localRosOnlineRef = useRef(false);
   const frameCountRef = useRef(0);
   const lastFpsUpdateRef = useRef(Date.now());
 
+  const rosRef = useRef(null);
+  const promptTopicRef = useRef(null);
+  const trackIdTopicRef = useRef(null);
+  const cameraTopicRef = useRef(null);
+
   useEffect(() => {
     const ros = new ROSLIB.Ros({
       url: 'wss://handguesturerobot.onrender.com/rosbridge?client=frontend'
     });
 
+    rosRef.current = ros;
     ros.on('connection', () => setBackendStatus('Connected'));
     ros.on('error', () => setBackendStatus('Error connecting'));
     ros.on('close', () => setBackendStatus('Disconnected'));
 
-    const cameraTopic = new ROSLIB.Topic({
+    promptTopicRef.current = new ROSLIB.Topic({
+      ros: ros,
+      name: '/prompt/input',
+      messageType: 'std_msgs/String'
+    });
+
+    trackIdTopicRef.current = new ROSLIB.Topic({
+      ros: ros,
+      name: '/tracked/id',
+      messageType: 'std_msgs/Int32'
+    });
+
+    cameraTopicRef.current = new ROSLIB.Topic({
       ros: ros,
       name: '/camera/annotated/compressed',
       messageType: 'sensor_msgs/CompressedImage'
     });
 
-    cameraTopic.subscribe((msg) => {
+    cameraTopicRef.current.subscribe((msg) => {
       lastImageTimeRef.current = Date.now();
 
       frameCountRef.current += 1;
@@ -61,24 +82,37 @@ function App() {
     return () => clearInterval(interval);
   }, []);
 
-  const handleSendPrompt = () => {
-    const trimmed = prompt.trim();
-    if (!trimmed) return;
-    if (trimmed.length > 200) return alert('Prompt too long (max 200 chars)');
+  const sendPrompt = (value) => {
+    const trimmed = value.trim();
+    if (trimmed.length > 200) return;
+    promptTopicRef.current.publish(new ROSLIB.Message({ data: trimmed }));
+  };
 
-    const ros = new ROSLIB.Ros({
-      url: 'wss://handguesturerobot.onrender.com/rosbridge?client=frontend'
-    });
+  const sendTrackId = (value) => {
+    const intValue = parseInt(value, 10);
+    if (isNaN(intValue)) return;
+    trackIdTopicRef.current.publish(new ROSLIB.Message({ data: intValue }));
+  };
 
-    const promptTopic = new ROSLIB.Topic({
-      ros: ros,
-      name: '/prompt/input',
-      messageType: 'std_msgs/String'
-    });
+  const handlePromptSubmit = () => {
+    if (!prompt.trim()) return;
+    sendPrompt(prompt);
+    setShowTrackBox(true);
+    setTrackId('');
+  };
 
-    const msg = new ROSLIB.Message({ data: trimmed });
-    promptTopic.publish(msg);
+  const handleClearPrompt = () => {
     setPrompt('');
+    sendPrompt(prompt);
+    setShowTrackBox(false);
+    setTrackId('');
+    setTrackingStatus('');
+  };
+
+  const handleTrackIdSubmit = () => {
+    if (!trackId.trim()) return;
+    sendTrackId(trackId);
+    setTrackingStatus(`Tracking "${prompt}" (ID ${trackId})`);
   };
 
   return (
@@ -99,8 +133,28 @@ function App() {
           onChange={e => setPrompt(e.target.value)}
           style={{ width: '300px' }}
         />
-        <button onClick={handleSendPrompt} style={{ marginLeft: '10px' }}>Send Prompt</button>
+        <button onClick={handlePromptSubmit} style={{ marginLeft: '10px' }}>Prompt</button>
+        <button onClick={handleClearPrompt} style={{ marginLeft: '10px' }}>Clear</button>
       </div>
+
+      {showTrackBox && (
+        <div style={{ marginTop: '10px' }}>
+          <input
+            type="number"
+            placeholder="Enter tracking ID"
+            value={trackId}
+            onChange={e => setTrackId(e.target.value)}
+            style={{ width: '150px' }}
+          />
+          <button onClick={handleTrackIdSubmit} style={{ marginLeft: '10px' }}>Track ID</button>
+        </div>
+      )}
+
+      {trackingStatus && (
+        <div style={{ marginTop: '10px', fontSize: '1.1em', color: '#4fd1c5' }}>
+          {trackingStatus}
+        </div>
+      )}
     </div>
   );
 }

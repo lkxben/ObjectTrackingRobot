@@ -30,14 +30,8 @@ class AnnotatedPublisher(Node):
             10
         )
 
-        self.create_subscription(Float32MultiArray, '/camera/info', self.info_callback, 10)
-        self.resolution = (320.0, 240.0)
-
         self.pub = self.create_publisher(CompressedImage, '/camera/annotated/compressed', 10)
         self.get_logger().info('Annotated Publisher Setup - Complete')
-
-    def info_callback(self, msg):
-        self.resolution = (msg.data[0], msg.data[1])
 
     def detection_callback(self, msg: DetectionArray):
         if len(msg.detections) > 0:
@@ -76,8 +70,6 @@ class AnnotatedPublisher(Node):
                     1,
                     cv2.LINE_8
                 )
-
-            # frame = cv2.resize(frame, (int(self.resolution[0] * 0.9), int(self.resolution[1] * 0.9)))
 
             compressed_msg = self.bridge.cv2_to_compressed_imgmsg(frame, dst_format='jpeg')
             self.pub.publish(compressed_msg)
