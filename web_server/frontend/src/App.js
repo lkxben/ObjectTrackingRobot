@@ -89,6 +89,7 @@ function App() {
       </div>
       <div id="backendStatus" style={{ marginTop: '10px', fontSize: '1.1em' }}>Backend: {backendStatus}</div>
       <div id="rosStatus" style={{ marginTop: '5px', fontSize: '1.1em' }}>Local ROS: {rosStatus}</div>
+      <div id="fps" style={{ marginTop: '5px', fontSize: '1.1em' }}>FPS: {fps}</div>
 
       <div style={{ marginTop: '20px' }}>
         <input
