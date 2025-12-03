@@ -24,10 +24,10 @@ DEADZONE = 1.3
 class TrackingNode(Node):
     def __init__(self):
         super().__init__('tracking_node')
-        self.subscription = self.create_subscription(
-            Float32MultiArray,
-            '/detection',
-            self.callback,
+        self.det_sub = self.create_subscription(
+            DetectionArray,
+            '/detection/tracked',
+            self.detection_callback,
             10
         )
         self.trackId_sub = self.create_subscription(
@@ -36,7 +36,8 @@ class TrackingNode(Node):
             self.trackId_callback,
             10
         )
-        self.resolution = (320, 240) 
+        self.trackId = -1
+        self.resolution = (320, 240)
         self.create_subscription(Float32MultiArray, '/camera/info', self.info_callback, 10)
         self.max_angle = 90.0
         self.get_logger().info('Tracking Node Setup - Complete')
@@ -45,16 +46,21 @@ class TrackingNode(Node):
         self.resolution = (msg.data[0], msg.data[1])
 
     def trackId_callback(self, msg):
-        self.get_logger().info("TRACKED: " + str(msg.data))
+        self.get_logger().info(msg.data)
+        self.trackId = msg.data
         
-    def callback(self, msg):
-        data = msg.data
-        if len(data) < 4:
-            self.get_logger().warn('Received box with insufficient data')
-            return
+    def image_callback(self, msg):
+        tracked_det = None
+        for det in msg.detections:
+            if det.track_id == self.trackId:
+                tracked_det = det
+                break
         
-        mid_x = (data[0] + data[2]) / 2
-        mid_y = (data[1] + data[3]) / 2
+        if not tracked_det:
+            self.get_logger().debug(f"No detection matches id {self.trackId}")
+        
+        mid_x = (tracked_det.x1 + tracked_det.x2) / 2
+        mid_y = (tracked_det.y1 + tracked_det.y2) / 2
 
         frame_width, frame_height = self.resolution
         dx = mid_x - frame_width / 2

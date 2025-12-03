@@ -92,13 +92,15 @@ function App() {
     setTrackingStatus(`Tracking "${prompt}" (ID ${trackId})`);
   };
 
+  const streamActive = rosStatus === 'Online' && Date.now() - lastImageTimeRef.current < 5000;
+
   return (
     <div className="dashboard-container">
       <main className="dashboard-main">
         <section className="camera-card">
           <div className="camera-image-wrapper">
-            {imgRef.current && imgRef.current.src ? (
-              <img ref={imgRef} src={imgRef.current.src} alt="Camera stream" />
+            {streamActive ? (
+              <img ref={imgRef} src="" alt="Camera stream" />
             ) : (
               <div className="placeholder-text">Waiting for stream...</div>
             )}
