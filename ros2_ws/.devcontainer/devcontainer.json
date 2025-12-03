@@ -1,0 +1,15 @@
+{
+  "name": "ROS 2 Development Container",
+  "build": {
+    "dockerfile": "../Dockerfile",
+    "context": ".."
+  },
+  "workspaceFolder": "/root/ros2_ws",
+  "mounts": [
+    "source=${localWorkspaceFolder}/ros2_ws/src,target=/root/ros2_ws/src,type=bind"
+  ],
+  "extensions": [
+    "ms-iot.vscode-ros"
+  ],
+  "postCreateCommand": "colcon build --symlink-install && source install/setup.bash"
+}

@@ -4,14 +4,24 @@ __pycache__/
 *.pyd
 *.log
 
+# Server
+web_server/backend/node_modules/
+
+# ROS2
+build/
+install/
+log/
+
+# Docker
+*.env
+
 venv/
 .venv/
 .vscode/
 .DS_Store
 
+.env
 datasets/
 models/checkpoints/
 *.h5
 *.keras
-
-.env

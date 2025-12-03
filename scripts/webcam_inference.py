@@ -8,7 +8,7 @@ IMG_SIZE = 224
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 # Load model
-model = YOLO("weights/best.pt")
+model = YOLO("weights/no-fh3.pt")
 
 # Open webcam
 cap = cv2.VideoCapture(0)

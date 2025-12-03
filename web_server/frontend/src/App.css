@@ -1,0 +1,27 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body, html, #root {
+  width: 100%;
+  height: 100%;
+  font-family: sans-serif;
+  background: #111;
+  color: #eee;
+}
+
+img {
+  width: 80vw;
+  max-width: 100%;
+  height: auto;
+  border: 2px solid #555;
+  border-radius: 6px;
+  margin-top: 20px;
+}
+
+#status {
+  margin-top: 10px;
+  font-size: 1.1em;
+}
