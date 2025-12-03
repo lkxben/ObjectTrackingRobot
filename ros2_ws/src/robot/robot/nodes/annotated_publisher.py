@@ -25,13 +25,19 @@ class AnnotatedPublisher(Node):
 
         self.det_sub = self.create_subscription(
             DetectionArray,
-            '/detection',
+            '/detection/tracked',
             self.detection_callback,
             10
         )
 
+        self.create_subscription(Float32MultiArray, '/camera/info', self.info_callback, 10)
+        self.resolution = (320.0, 240.0)
+
         self.pub = self.create_publisher(CompressedImage, '/camera/annotated/compressed', 10)
         self.get_logger().info('Annotated Publisher Setup - Complete')
+
+    def info_callback(self, msg):
+        self.resolution = (msg.data[0], msg.data[1])
 
     def detection_callback(self, msg: DetectionArray):
         if len(msg.detections) > 0:
@@ -53,24 +59,25 @@ class AnnotatedPublisher(Node):
                 x1, y1, x2, y2 = int(det.x1), int(det.y1), int(det.x2), int(det.y2)
                 class_name = det.class_name
                 conf = det.confidence
+                track_id = det.track_id
 
                 # Draw box
                 cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 0, 255), 2)
 
                 # Text label
-                label = f"{class_name} {conf:.2f}"
+                label = f"{class_name} {conf:.2f} {track_id}"
                 cv2.putText(
                     frame,
                     label,
                     (x1, y1 - 5),
-                    cv2.FONT_HERSHEY_COMPLEX,
+                    cv2.FONT_ITALIC,
                     0.5,
                     (0, 0, 255),
                     1,
                     cv2.LINE_8
                 )
 
-            frame = cv2.resize(frame, (320, 180))
+            # frame = cv2.resize(frame, (int(self.resolution[0] * 0.9), int(self.resolution[1] * 0.9)))
 
             compressed_msg = self.bridge.cv2_to_compressed_imgmsg(frame, dst_format='jpeg')
             self.pub.publish(compressed_msg)

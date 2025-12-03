@@ -18,7 +18,7 @@ class PromptCVNode(Node):
         self.prompt_sub = self.create_subscription(
             String,
             '/prompt/input',
-            self.prompt_callbacks,
+            self.prompt_callback,
             10
         )
         self.det_pub = self.create_publisher(DetectionArray, '/detection', 10)
@@ -32,8 +32,12 @@ class PromptCVNode(Node):
 
         self.get_logger().info('Prompt CV Setup - Complete')
 
-    def prompt_callbacks(self, msg):
-        if msg.data.strip():  # non-empty string
+    def prompt_callback(self, msg):
+        if msg.data is "clear":
+            self.prompts = None
+            self.model = self.model_pf
+            self.get_logger().info("All mode: detecting all classes")
+        elif msg.data.strip():  # non-empty string
             self.prompts = msg.data.split(",")
             self.model = self.model_prompt
             self.model.set_classes(self.prompts, self.model_prompt.get_text_pe(self.prompts))
@@ -76,7 +80,6 @@ class PromptCVNode(Node):
             detections_msg.detections.append(det)
             
         self.det_pub.publish(detections_msg)
-        self.get_logger().info(str(detections_msg))
 
 def main(args=None):
     rclpy.init(args=args)

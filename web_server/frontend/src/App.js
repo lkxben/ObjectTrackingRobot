@@ -6,9 +6,12 @@ function App() {
   const [backendStatus, setBackendStatus] = useState('Connecting...');
   const [rosStatus, setRosStatus] = useState('Unknown');
   const [prompt, setPrompt] = useState('');
+  const [fps, setFps] = useState(0);
   const imgRef = useRef(null);
   const lastImageTimeRef = useRef(Date.now());
   const localRosOnlineRef = useRef(false);
+  const frameCountRef = useRef(0);
+  const lastFpsUpdateRef = useRef(Date.now());
 
   useEffect(() => {
     const ros = new ROSLIB.Ros({
@@ -27,6 +30,15 @@ function App() {
 
     cameraTopic.subscribe((msg) => {
       lastImageTimeRef.current = Date.now();
+
+      frameCountRef.current += 1;
+      const now = Date.now();
+      if (now - lastFpsUpdateRef.current >= 1000) {
+        setFps(frameCountRef.current);
+        frameCountRef.current = 0;
+        lastFpsUpdateRef.current = now;
+      }
+
       if (!msg.data) return;
 
       if (!localRosOnlineRef.current) {

@@ -3,6 +3,7 @@ import threading
 import json
 import time
 import queue
+from websocket import ABNF, WebSocketConnectionClosedException
 
 LOCAL = "ws://localhost:9090"
 BACKEND = "wss://handguesturerobot.onrender.com/rosbridge?client=localrosbridge"
@@ -18,7 +19,7 @@ def connect(url):
     while True:
         try:
             return websocket.create_connection(
-                url, ping_interval=20, ping_timeout=10
+                url, ping_interval=20, ping_timeout=10, compression=None
             )
         except:
             time.sleep(1)
@@ -77,13 +78,20 @@ def start_tunnel():
         def recv_local():
             while True:
                 try:
-                    msg = ws_local.recv()
-                    try:
-                        ws_backend.send(msg)
-                    except:
-                        pass  # drop frame
-                except:
+                    frame = ws_local.recv_frame()
+                    if frame.opcode == ABNF.OPCODE_TEXT:
+                        try:
+                            ws_backend.send(frame.data.decode("utf-8"))
+                        except WebSocketConnectionClosedException:
+                            break
+                        except:
+                            time.sleep(0.01)
+                            continue
+                except WebSocketConnectionClosedException:
                     break
+                except:
+                    time.sleep(0.01)
+                    continue
 
         threading.Thread(target=recv_backend, daemon=True).start()
         threading.Thread(target=send_to_local, daemon=True).start()
