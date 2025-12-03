@@ -1,6 +1,6 @@
 import rclpy
 from rclpy.node import Node
-from std_msgs.msg import Float32MultiArray
+from std_msgs.msg import Float32MultiArray, Int32
 import socket
 import os
 from dotenv import load_dotenv
@@ -30,13 +30,22 @@ class TrackingNode(Node):
             self.callback,
             10
         )
-        self.resolution = (640, 480) 
+        self.trackId_sub = self.create_subscription(
+            Int32,
+            '/tracked/id',
+            self.trackId_callback,
+            10
+        )
+        self.resolution = (320, 240) 
         self.create_subscription(Float32MultiArray, '/camera/info', self.info_callback, 10)
         self.max_angle = 90.0
         self.get_logger().info('Tracking Node Setup - Complete')
 
     def info_callback(self, msg):
         self.resolution = (msg.data[0], msg.data[1])
+
+    def trackId_callback(self, msg):
+        self.get_logger().info("TRACKED: " + str(msg.data))
         
     def callback(self, msg):
         data = msg.data

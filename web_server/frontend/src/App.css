@@ -1,27 +1,134 @@
-* {
+body, html, #root {
   margin: 0;
   padding: 0;
-  box-sizing: border-box;
-}
-
-body, html, #root {
-  width: 100%;
   height: 100%;
-  font-family: sans-serif;
-  background: #111;
-  color: #eee;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: #0d1117;
+  color: #c9d1d9;
 }
 
-img {
-  width: 80vw;
-  max-width: 100%;
-  height: auto;
-  border: 2px solid #555;
-  border-radius: 6px;
-  margin-top: 20px;
+.dashboard-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px;
 }
 
-#status {
+.dashboard-main {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  width: 100%;
+  max-width: 900px;
+}
+
+.prompt-card {
+  background: #161b22;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.6);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.camera-card {
+  background: #161b22;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.6);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.camera-image-wrapper {
+  width: 100%;
+  min-height: 240px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid #30363d;
+  border-radius: 8px;
+  margin-bottom: 15px;
+  background: #0d1117;
+}
+
+.camera-image-wrapper img {
+  width: 100%;
+  border-radius: 8px;
+}
+
+.camera-image-wrapper .placeholder-text {
+  color: #8b949e;
+  font-size: 1.2rem;
+  font-weight: 500;
+}
+
+.camera-status span {
+  margin-right: 15px;
+  font-weight: 500;
+  color: #8b949e;
+}
+
+.stream-controls {
+  display: flex;
+  gap: 10px;
   margin-top: 10px;
-  font-size: 1.1em;
+}
+
+.stream-controls button {
+  padding: 8px 15px;
+  border-radius: 8px;
+  border: none;
+  font-weight: bold;
+  cursor: pointer;
+  background: #444c56; /* slate grey */
+  color: #c9d1d9;
+  transition: 0.2s;
+}
+
+.stream-controls button:hover {
+  background: #565f6c; /* slightly lighter slate grey */
+}
+
+.prompt-inputs, .track-inputs {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+  width: 100%;
+}
+
+.prompt-inputs input, .track-inputs input {
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: 1px solid #30363d;
+  flex: 1;
+  font-size: 1rem;
+  background: #0d1117;
+  color: #c9d1d9;
+}
+
+.prompt-inputs button, .track-inputs button {
+  padding: 8px 15px;
+  border-radius: 6px;
+  border: none;
+  background: #444c56; /* slate grey */
+  color: #c9d1d9;
+  font-weight: bold;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.prompt-inputs button:hover, .track-inputs button:hover {
+  background: #565f6c; /* slightly lighter slate grey */
+}
+
+.tracking-status {
+  margin-top: 15px;
+  font-size: 1.1rem;
+  font-weight: bold;
+  color: #58a6ff;
+  text-align: center;
 }
