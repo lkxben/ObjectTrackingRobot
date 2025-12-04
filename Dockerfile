@@ -39,8 +39,15 @@ WORKDIR /root/ObjectTrackingRobot/ros2_ws
 RUN git clone https://github.com/ifzhang/ByteTrack.git /root/ByteTrack
 WORKDIR /root/ByteTrack
 RUN python3 -m pip install onnxruntime==1.22.0
-RUN python3 -m pip install numpy loguru scikit-image tqdm torchvision Pillow thop ninja tabulate tensorboard lap motmetrics filterpy h5py cython_bbox lap cython
+RUN python3 -m pip install loguru scikit-image tqdm torchvision Pillow thop ninja tabulate tensorboard lap motmetrics filterpy h5py cython_bbox lap cython "numpy<1.24"
 RUN python3 setup.py develop
+
+# Install fear-xs
+WORKDIR /root
+RUN git clone https://github.com/PinataFarms/FEARTracker.git
+WORKDIR /root/FEARTracker
+RUN python3 -m pip install yacs shapely colorama matplotlib tqdm opencv-python "numpy<1.24" --no-deps
+
 
 # Source ROS 2 automatically when container starts
 RUN echo "source /opt/ros/humble/setup.bash" >> ~/.bashrc

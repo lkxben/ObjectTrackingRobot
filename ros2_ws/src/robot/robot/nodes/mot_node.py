@@ -4,12 +4,12 @@ from robot_msgs.msg import DetectionArray
 from std_msgs.msg import Float32MultiArray, String
 import numpy as np
 import torch
-from yolox.tracker.byte_tracker import BYTETracker, STrack
+from yolox.tracker.byte_tracker import BYTETracker
 from robot_msgs.msg import Detection, DetectionArray
 
-class ByteTrackNode(Node):
+class MOTNode(Node):
     def __init__(self):
-        super().__init__('bytetrack_node')
+        super().__init__('mot_node')
         self.det_sub = self.create_subscription(
             DetectionArray,
             '/detection',
@@ -39,10 +39,11 @@ class ByteTrackNode(Node):
         self.create_subscription(Float32MultiArray, '/camera/info', self.info_callback, 10)
         self.resolution = (320.0, 240.0)
 
-        self.get_logger().info('ByteTrack Setup - Complete')
+        self.get_logger().info('MOT Setup - Complete')
 
     def info_callback(self, msg):
-        self.resolution = (msg.data[0], msg.data[1])
+        if len(msg.data) >= 2:
+            self.resolution = (msg.data[0], msg.data[1])
 
     def prompt_callback(self, msg):
         self.tracker = BYTETracker(self.args, frame_rate=30)
@@ -102,7 +103,7 @@ class ByteTrackNode(Node):
 
 def main(args=None):
     rclpy.init(args=args)
-    node = ByteTrackNode()
+    node = MOTNode()
     rclpy.spin(node)
     node.destroy_node()
     rclpy.shutdown()

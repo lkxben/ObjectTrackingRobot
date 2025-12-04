@@ -47,7 +47,8 @@ class TrackingNode(Node):
         self.get_logger().info('Tracking Node Setup - Complete')
 
     def info_callback(self, msg):
-        self.resolution = (msg.data[0], msg.data[1])
+        if len(msg.data) >= 2:
+            self.resolution = (msg.data[0], msg.data[1])
 
     def trackId_callback(self, msg):
         self.get_logger().info(f"Received track ID: {msg.data}")
