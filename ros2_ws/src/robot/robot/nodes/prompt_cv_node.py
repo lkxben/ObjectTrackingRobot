@@ -33,11 +33,7 @@ class PromptCVNode(Node):
         self.get_logger().info('Prompt CV Setup - Complete')
 
     def prompt_callback(self, msg):
-        if msg.data is "clear":
-            self.prompts = None
-            self.model = self.model_pf
-            self.get_logger().info("All mode: detecting all classes")
-        elif msg.data.strip():  # non-empty string
+        if msg.data.strip():  # non-empty string
             self.prompts = msg.data.split(",")
             self.model = self.model_prompt
             self.model.set_classes(self.prompts, self.model_prompt.get_text_pe(self.prompts))

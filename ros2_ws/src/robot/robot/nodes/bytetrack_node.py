@@ -47,7 +47,6 @@ class ByteTrackNode(Node):
     def prompt_callback(self, msg):
         self.tracker = BYTETracker(self.args, frame_rate=30)
         self.frame_id = 0
-        self.get_logger().info("RESET TRACKER")
 
     def detection_callback(self, msg):
         if not msg.detections:
