@@ -20,9 +20,10 @@ class SOTNode(Node):
         super().__init__('sot_node')
 
         self.bridge = CvBridge()
-        self.active_track_id = None
+        self.active_target_id = None
         self.pending_bbox = None
         self.tracker_state = None
+        self.target_class = None
 
         self.net = SiamRPNBIG()
         self.net.load_state_dict(torch.load('/root/DaSiamRPN/code/SiamRPNBIG.model', map_location=torch.device('cpu'), weights_only=False))
@@ -30,8 +31,8 @@ class SOTNode(Node):
 
         self.det_sub = self.create_subscription(
             DetectionArray, '/detection/mot', self.detection_callback, 10)
-        self.trackId_sub = self.create_subscription(
-            Int32, '/tracked/id', self.trackId_callback, 10)
+        self.target_id_sub = self.create_subscription(
+            Int32, '/tracked/id', self.target_id_callback, 10)
         self.image_sub = self.create_subscription(
             Image, '/camera/image_raw', self.image_callback, 10)
 
@@ -40,28 +41,30 @@ class SOTNode(Node):
 
         self.get_logger().info("SOT (DaSiamRPN) Node Initialized")
 
-    def trackId_callback(self, msg):
-        self.active_track_id = msg.data
-        self.tracker_state = None  # reset tracker for new object
+    def target_id_callback(self, msg):
+        self.active_target_id = msg.data
+        self.tracker_state = None
+        self.target_class = None
         self.pending_bbox = None
         self.get_logger().info(f"Selected object ID: {msg.data}")
 
     def detection_callback(self, msg):
-        if self.active_track_id is None or self.tracker_state is not None:
+        if self.active_target_id is None or self.tracker_state is not None:
             return
 
         for det in msg.detections:
-            if det.track_id == self.active_track_id:
+            if det.track_id == self.active_target_id:
                 cx = (det.x1 + det.x2) / 2
                 cy = (det.y1 + det.y2) / 2
                 w = det.x2 - det.x1
                 h = det.y2 - det.y1
                 self.pending_bbox = np.array([cx, cy, w, h])
+                self.target_class = det.class_name
                 self.get_logger().info(f"Pending bbox for tracker ID {det.track_id}: {self.pending_bbox}")
                 break
 
     def image_callback(self, msg):
-        if self.active_track_id is None:
+        if self.active_target_id is None:
             return
 
         frame = self.bridge.imgmsg_to_cv2(msg, desired_encoding='bgr8')
@@ -73,7 +76,7 @@ class SOTNode(Node):
             target_sz = np.array([w, h])
             self.tracker_state = SiamRPN_init(frame, target_pos, target_sz, self.net)
             self.pending_bbox = None
-            self.get_logger().info(f"Tracker initialized for ID {self.active_track_id}")
+            self.get_logger().info(f"Tracker initialized for ID {self.active_target_id}")
             return
 
         if self.tracker_state is not None:
@@ -83,11 +86,12 @@ class SOTNode(Node):
             x, y, w, h = bbox.astype(float) 
 
             det_msg = Detection()
-            det_msg.track_id = self.active_track_id
+            det_msg.track_id = self.active_target_id
             det_msg.x1 = x
             det_msg.y1 = y
             det_msg.x2 = x + w
             det_msg.y2 = y + h
+            det_msg.class_name = self.target_class
 
             arr_msg = DetectionArray()
             arr_msg.detections.append(det_msg)

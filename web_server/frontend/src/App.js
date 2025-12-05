@@ -5,21 +5,21 @@ import './App.css';
 function App() {
   const [backendStatus, setBackendStatus] = useState('Connecting...');
   const [rosStatus, setRosStatus] = useState('Unknown');
-  const [prompt, setPrompt] = useState('');
-  const [trackId, setTrackId] = useState('');
-  const [showTrackBox, setShowTrackBox] = useState(false);
   const [fps, setFps] = useState(0);
   const [trackingStatus, setTrackingStatus] = useState('');
+
+  const [mode, setMode] = useState('IDLE');
+  const [prompt, setPrompt] = useState('');
+  const [trackId, setTrackId] = useState('');
+
   const imgRef = useRef(null);
   const lastImageTimeRef = useRef(Date.now());
   const localRosOnlineRef = useRef(false);
   const frameCountRef = useRef(0);
   const lastFpsUpdateRef = useRef(Date.now());
-
   const rosRef = useRef(null);
-  const promptTopicRef = useRef(null);
-  const trackIdTopicRef = useRef(null);
   const cameraTopicRef = useRef(null);
+  const inputTopicRef = useRef(null);
 
   useEffect(() => {
     const ros = new ROSLIB.Ros({ url: 'wss://objecttrackingrobot.onrender.com/rosbridge?client=frontend' });
@@ -28,10 +28,13 @@ function App() {
     ros.on('error', () => setBackendStatus('Error connecting'));
     ros.on('close', () => setBackendStatus('Disconnected'));
 
-    promptTopicRef.current = new ROSLIB.Topic({ ros, name: '/prompt/input', messageType: 'std_msgs/String' });
-    trackIdTopicRef.current = new ROSLIB.Topic({ ros, name: '/tracked/id', messageType: 'std_msgs/Int32' });
+    inputTopicRef.current = new ROSLIB.Topic({
+      ros,
+      name: '/input',
+      messageType: 'robot_msgs/Input',
+    });
+    
     cameraTopicRef.current = new ROSLIB.Topic({ ros, name: '/camera/annotated/compressed', messageType: 'sensor_msgs/CompressedImage' });
-
     cameraTopicRef.current.subscribe((msg) => {
       lastImageTimeRef.current = Date.now();
       frameCountRef.current += 1;
@@ -59,36 +62,41 @@ function App() {
     return () => clearInterval(interval);
   }, []);
 
-  const sendPrompt = (value) => {
-    const trimmed = value.trim();
-    if (trimmed.length > 200) return;
-    promptTopicRef.current.publish(new ROSLIB.Message({ data: trimmed }));
-  };
+  const sendInput = (modeValue, promptValue, targetIdValue) => {
+    const msg = {
+      mode: modeValue || '',
+      prompt: promptValue || '',
+      target_id: parseInt(targetIdValue, 10) || -1
+    };
+    inputTopicRef.current.publish(new ROSLIB.Message(msg));
+  }
 
-  const sendTrackId = (value) => {
-    const intValue = parseInt(value, 10);
-    if (isNaN(intValue)) return;
-    trackIdTopicRef.current.publish(new ROSLIB.Message({ data: intValue }));
+  const handleModeChange = (e) => {
+    const newMode = e.target.value;
+    setMode(newMode);
+
+    setPrompt('');
+    setTrackId('');
+    setTrackingStatus('');
+
+    sendInput(newMode, '', -1);
   };
 
   const handlePromptSubmit = () => {
     if (!prompt.trim()) return;
-    sendPrompt(prompt);
-    setShowTrackBox(true);
-    setTrackId('');
+    sendInput(mode, prompt, trackId || -1);
   };
 
   const handleClearPrompt = () => {
-    sendPrompt('');
     setPrompt('');
-    setShowTrackBox(false);
     setTrackId('');
     setTrackingStatus('');
+    sendInput(mode, '', -1);
   };
 
   const handleTrackIdSubmit = () => {
     if (!trackId.trim()) return;
-    sendTrackId(trackId);
+    sendInput(mode, prompt, trackId);
     setTrackingStatus(`Tracking "${prompt}" (ID ${trackId})`);
   };
 
@@ -119,13 +127,24 @@ function App() {
         </section>
 
         <section className="prompt-card">
-          <div className="prompt-inputs">
-            <input type="text" placeholder="Enter prompts, comma-separated" value={prompt} onChange={e => setPrompt(e.target.value)} />
-            <button onClick={handlePromptSubmit}>Prompt</button>
-            <button onClick={handleClearPrompt}>Clear</button>
+          <div className="mode-select">
+            <select value={mode} onChange={handleModeChange}>
+              <option value="IDLE">IDLE</option>
+              <option value="MANUAL">MANUAL</option>
+              <option value="TRACK">TRACK</option>
+              <option value="AUTO">AUTO</option>
+            </select>
           </div>
 
-          {showTrackBox && (
+          {(mode === 'IDLE' || mode === 'TRACK' || mode === 'AUTO') && (
+            <div className="prompt-inputs">
+              <input type="text" placeholder="Enter prompts, comma-separated" value={prompt} onChange={e => setPrompt(e.target.value)} />
+              <button onClick={handlePromptSubmit}>Prompt</button>
+              <button onClick={handleClearPrompt}>Clear</button>
+            </div>
+          )}
+
+          {mode === 'TRACK' && (
             <div className="track-inputs">
               <input type="number" placeholder="Enter tracking ID" value={trackId} onChange={e => setTrackId(e.target.value)} />
               <button onClick={handleTrackIdSubmit}>Track ID</button>

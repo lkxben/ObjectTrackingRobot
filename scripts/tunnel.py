@@ -10,7 +10,8 @@ BACKEND = "wss://objecttrackingrobot.onrender.com/rosbridge?client=localrosbridg
 
 BACKEND_TOPICS = [
     {"topic": "/prompt/input", "type": "std_msgs/String"},
-    {"topic": "/tracked/id", "type": "std_msgs/Int32" }
+    {"topic": "/tracked/id", "type": "std_msgs/Int32" },
+    {"topic": "/input", "type": "robot_msgs/Input" }
 ]
 
 backend_to_local_queue = queue.Queue(maxsize=200)
