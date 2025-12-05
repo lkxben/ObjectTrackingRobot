@@ -29,6 +29,11 @@ def generate_launch_description():
             name='mot_node'
         ),
         Node(
+            package='robot',
+            executable='sot_node',
+            name='sot_node'
+        ),
+        Node(
             package='rosbridge_server',
             executable='rosbridge_websocket',
             name='rosbridge_websocket',

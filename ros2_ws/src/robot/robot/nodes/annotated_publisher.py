@@ -1,7 +1,7 @@
 import rclpy
 from rclpy.node import Node
 from sensor_msgs.msg import Image, CompressedImage
-from std_msgs.msg import Float32MultiArray
+from std_msgs.msg import Float32MultiArray, Int32
 from cv_bridge import CvBridge
 from robot_msgs.msg import DetectionArray
 import cv2
@@ -25,20 +25,53 @@ class AnnotatedPublisher(Node):
 
         self.det_sub = self.create_subscription(
             DetectionArray,
-            '/detection/tracked',
+            '/detection/mot',
             self.detection_callback,
             10
         )
 
+        self.trackId_sub = self.create_subscription(
+            Int32,
+            '/tracked/id',
+            self.trackId_callback,
+            10
+        )
+
+        self.track_sub = self.create_subscription(
+            DetectionArray,
+            '/detection/sot',
+            self.track_callback,
+            10
+        )
+
+        self.trackId = -1
         self.pub = self.create_publisher(CompressedImage, '/camera/annotated/compressed', 10)
         self.get_logger().info('Annotated Publisher Setup - Complete')
 
     def detection_callback(self, msg: DetectionArray):
+        if self.trackId != -1:
+            return
         if len(msg.detections) > 0:
             self.latest_detections = msg.detections
             self.last_det_time = time.time()
         else:
             self.latest_detections = []
+
+    def track_callback(self, msg):
+        if len(msg.detections) > 0:
+            for det in msg.detections:
+                if det.track_id == self.trackId:
+                    da = DetectionArray()
+                    da.detections.append(det)
+                    self.latest_detections = da.detections
+                    self.last_det_time = time.time()
+                    break
+        else:
+            self.latest_detections = []
+
+    def trackId_callback(self, msg):
+        self.get_logger().info(f"Received track ID: {msg.data}")
+        self.trackId = msg.data
 
     def image_callback(self, img_msg):
         try:

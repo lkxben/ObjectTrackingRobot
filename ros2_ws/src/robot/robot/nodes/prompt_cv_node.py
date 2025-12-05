@@ -21,7 +21,7 @@ class PromptCVNode(Node):
             self.prompt_callback,
             10
         )
-        self.det_pub = self.create_publisher(DetectionArray, '/detection', 10)
+        self.det_pub = self.create_publisher(DetectionArray, '/detection/raw', 10)
 
         self.bridge = CvBridge()
         self.model_pf = YOLOE("yoloe-11s-seg-pf.pt")

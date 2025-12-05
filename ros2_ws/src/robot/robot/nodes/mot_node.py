@@ -1,6 +1,5 @@
 import rclpy
 from rclpy.node import Node
-from robot_msgs.msg import DetectionArray
 from std_msgs.msg import Float32MultiArray, String
 import numpy as np
 import torch
@@ -12,7 +11,7 @@ class MOTNode(Node):
         super().__init__('mot_node')
         self.det_sub = self.create_subscription(
             DetectionArray,
-            '/detection',
+            '/detection/raw',
             self.detection_callback,
             10
         )
@@ -23,7 +22,7 @@ class MOTNode(Node):
             10
         )
 
-        self.track_pub = self.create_publisher(DetectionArray, '/detection/tracked', 10)
+        self.track_pub = self.create_publisher(DetectionArray, '/detection/mot', 10)
         class TrackerArgs:
             track_thresh = 0.1
             track_buffer = 30
