@@ -10,7 +10,7 @@ function App() {
 
   const [mode, setMode] = useState('IDLE');
   const [prompt, setPrompt] = useState('');
-  const [trackId, setTrackId] = useState('');
+  const [targetId, setTargetId] = useState('');
 
   const imgRef = useRef(null);
   const lastImageTimeRef = useRef(Date.now());
@@ -62,11 +62,11 @@ function App() {
     return () => clearInterval(interval);
   }, []);
 
-  const sendInput = (modeValue, promptValue, targetIdValue) => {
+  const sendInput = ({ mode, prompt, target_id }) => {
     const msg = {
-      mode: modeValue || '',
-      prompt: promptValue || '',
-      target_id: parseInt(targetIdValue, 10) || -1
+      mode: mode ?? "",
+      prompt: prompt ?? "__NONE__",
+      target_id: target_id !== undefined ? parseInt(target_id, 10) : -1
     };
     inputTopicRef.current.publish(new ROSLIB.Message(msg));
   }
@@ -76,28 +76,28 @@ function App() {
     setMode(newMode);
 
     setPrompt('');
-    setTrackId('');
+    setTargetId('');
     setTrackingStatus('');
 
-    sendInput(newMode, '', -1);
+    sendInput({ mode: newMode });
   };
 
   const handlePromptSubmit = () => {
     if (!prompt.trim()) return;
-    sendInput(mode, prompt, trackId || -1);
+    sendInput({ prompt: prompt });
   };
 
   const handleClearPrompt = () => {
     setPrompt('');
-    setTrackId('');
+    setTargetId('');
     setTrackingStatus('');
-    sendInput(mode, '', -1);
+    sendInput({ prompt: "__EMPTY__" });
   };
 
-  const handleTrackIdSubmit = () => {
-    if (!trackId.trim()) return;
-    sendInput(mode, prompt, trackId);
-    setTrackingStatus(`Tracking "${prompt}" (ID ${trackId})`);
+  const handleTargetIdSubmit = () => {
+    if (!targetId.trim()) return;
+    sendInput({ target_id: targetId });
+    setTrackingStatus(`Tracking "${prompt}" (ID ${targetId})`);
   };
 
   const streamActive = rosStatus === 'Online' && Date.now() - lastImageTimeRef.current < 5000;
@@ -146,8 +146,8 @@ function App() {
 
           {mode === 'TRACK' && (
             <div className="track-inputs">
-              <input type="number" placeholder="Enter tracking ID" value={trackId} onChange={e => setTrackId(e.target.value)} />
-              <button onClick={handleTrackIdSubmit}>Track ID</button>
+              <input type="number" placeholder="Enter target ID" value={targetId} onChange={e => setTargetId(e.target.value)} />
+              <button onClick={handleTargetIdSubmit}>Track ID</button>
             </div>
           )}
 

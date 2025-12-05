@@ -10,6 +10,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/DetectionArray.msg"
   "msg/Input.msg"
   "msg/TurretState.msg"
+  "msg/TurretEvent.msg"
   DEPENDENCIES std_msgs
 )
 

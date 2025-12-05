@@ -1,5 +1,4 @@
-string mode
-string status
+string event
 string prompt
 int32 target_id
 
