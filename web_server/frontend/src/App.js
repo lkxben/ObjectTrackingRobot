@@ -22,7 +22,7 @@ function App() {
   const cameraTopicRef = useRef(null);
 
   useEffect(() => {
-    const ros = new ROSLIB.Ros({ url: 'wss://handguesturerobot.onrender.com/rosbridge?client=frontend' });
+    const ros = new ROSLIB.Ros({ url: 'wss://objecttrackingrobot.onrender.com/rosbridge?client=frontend' });
     rosRef.current = ros;
     ros.on('connection', () => setBackendStatus('Connected'));
     ros.on('error', () => setBackendStatus('Error connecting'));

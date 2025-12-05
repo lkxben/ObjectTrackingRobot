@@ -6,7 +6,7 @@ import queue
 from websocket import ABNF, WebSocketConnectionClosedException
 
 LOCAL = "ws://localhost:9090"
-BACKEND = "wss://handguesturerobot.onrender.com/rosbridge?client=localrosbridge"
+BACKEND = "wss://objecttrackingrobot.onrender.com/rosbridge?client=localrosbridge"
 
 BACKEND_TOPICS = [
     {"topic": "/prompt/input", "type": "std_msgs/String"},
