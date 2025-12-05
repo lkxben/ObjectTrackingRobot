@@ -36,7 +36,7 @@ const rosStatusEl = document.getElementById('rosStatus');
 const promptInput = document.getElementById('promptInput');
 const sendPromptBtn = document.getElementById('sendPrompt');
 
-const ros = new ROSLIB.Ros({ url: 'wss://handguesturerobot.onrender.com/rosbridge?client=frontend' });
+const ros = new ROSLIB.Ros({ url: 'wss://objecttrackingrobot.onrender.com/rosbridge?client=frontend' });
 
 let localRosOnline = false;
 function updateRosStatus() {

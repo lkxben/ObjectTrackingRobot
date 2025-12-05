@@ -135,3 +135,43 @@ body, html, #root {
   color: #58a6ff;
   text-align: center;
 }
+
+.mode-card {
+  background: #161b22;
+  border-radius: 12px;
+  padding: 15px 20px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.6);
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  max-width: 300px; /* limit width */
+  margin-bottom: 20px;
+}
+
+.mode-card select {
+  width: 100%;
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: 1px solid #30363d;
+  background: #0d1117;
+  color: #c9d1d9;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  text-align: center;
+  transition: 0.2s;
+}
+
+.mode-card select:hover {
+  background: #161b22;
+  border-color: #444c56;
+}
+
+.mode-card select:focus {
+  outline: none;
+  border-color: #58a6ff;
+  box-shadow: 0 0 0 2px rgba(88, 166, 255, 0.3);
+}

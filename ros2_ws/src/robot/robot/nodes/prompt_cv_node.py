@@ -1,10 +1,9 @@
 import rclpy
 from rclpy.node import Node
 from sensor_msgs.msg import Image
-from std_msgs.msg import Float32MultiArray, String
 from cv_bridge import CvBridge
 from ultralytics import YOLOE
-from robot_msgs.msg import Detection, DetectionArray
+from robot_msgs.msg import Detection, DetectionArray, Input
 
 class PromptCVNode(Node):
     def __init__(self):
@@ -15,13 +14,13 @@ class PromptCVNode(Node):
             self.image_callback,
             10
         )
-        self.prompt_sub = self.create_subscription(
-            String,
-            '/prompt/input',
-            self.prompt_callback,
+        self.input_sub = self.create_subscription(
+            Input,
+            '/input',
+            self.input_callback,
             10
         )
-        self.det_pub = self.create_publisher(DetectionArray, '/detection', 10)
+        self.det_pub = self.create_publisher(DetectionArray, '/detection/raw', 10)
 
         self.bridge = CvBridge()
         self.model_pf = YOLOE("yoloe-11s-seg-pf.pt")
@@ -32,9 +31,9 @@ class PromptCVNode(Node):
 
         self.get_logger().info('Prompt CV Setup - Complete')
 
-    def prompt_callback(self, msg):
-        if msg.data.strip():  # non-empty string
-            self.prompts = msg.data.split(",")
+    def input_callback(self, msg):
+        if msg.prompt.strip():  # non-empty string
+            self.prompts = msg.prompt.split(",")
             self.model = self.model_prompt
             self.model.set_classes(self.prompts, self.model_prompt.get_text_pe(self.prompts))
             self.get_logger().info(f"Prompt mode: detecting {self.prompts}")

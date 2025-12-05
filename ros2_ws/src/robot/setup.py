@@ -19,7 +19,8 @@ setup(
             'annotated_publisher = robot.nodes.annotated_publisher:main',
             'tracking_node = robot.nodes.tracking_node:main',
             'prompt_cv_node = robot.nodes.prompt_cv_node:main',
-            'bytetrack_node = robot.nodes.bytetrack_node:main'
+            'mot_node = robot.nodes.mot_node:main',
+            'sot_node = robot.nodes.sot_node:main'
         ],
     }, data_files=[
         ('share/ament_index/resource_index/packages',

@@ -4,7 +4,7 @@ from std_msgs.msg import Float32MultiArray, Int32
 import socket
 import os
 from dotenv import load_dotenv
-from robot_msgs.msg import DetectionArray
+from robot_msgs.msg import DetectionArray, Input
 import time
 
 load_dotenv()
@@ -18,23 +18,24 @@ SERVO_MIN = 0
 SERVO_MAX = 180
 FOV_X = 60.0
 FOV_Y = 75.0
-MAX_STEP = 1.0
-SMOOTHING = 0.3
-DEADZONE = 0.2
+MAX_STEP = 3.5
+# SMOOTHING = 0.3
+DEADZONE = 0.15
+FREQUENCY = 60.0
 
 class TrackingNode(Node):
     def __init__(self):
         super().__init__('tracking_node')
         self.det_sub = self.create_subscription(
             DetectionArray,
-            '/detection/tracked',
+            '/detection/sot',
             self.detection_callback,
             10
         )
-        self.trackId_sub = self.create_subscription(
-            Int32,
-            '/tracked/id',
-            self.trackId_callback,
+        self.input_sub = self.create_subscription(
+            Input,
+            '/input',
+            self.input_callback,
             10
         )
         self.trackId = -1
@@ -42,16 +43,17 @@ class TrackingNode(Node):
         self.create_subscription(Float32MultiArray, '/camera/info', self.info_callback, 10)
         self.max_angle = 90.0
         self.last_sent_time = 0.0
-        self.update_interval = 1.0 / 20.0
+        self.update_interval = 1.0 / FREQUENCY
 
         self.get_logger().info('Tracking Node Setup - Complete')
 
     def info_callback(self, msg):
-        self.resolution = (msg.data[0], msg.data[1])
+        if len(msg.data) >= 2:
+            self.resolution = (msg.data[0], msg.data[1])
 
-    def trackId_callback(self, msg):
-        self.get_logger().info(f"Received track ID: {msg.data}")
-        self.trackId = msg.data
+    def input_callback(self, msg):
+        self.get_logger().info(f"Received track ID: {msg.target_id}")
+        self.trackId = msg.target_id
         
     def detection_callback(self, msg):
         now = time.time()
@@ -89,7 +91,7 @@ class TrackingNode(Node):
         try:
             sock.sendto(udpmsg.encode(), (ESP32_IP, ESP32_PORT))
             self.last_sent_time = now
-            # self.get_logger().info(f"Sent UDP message: {udpmsg} to {ESP32_IP}:{ESP32_PORT}")
+            self.get_logger().info(f"Sent UDP message: {udpmsg} to {ESP32_IP}:{ESP32_PORT}")
         except Exception as e:
             self.get_logger().error(f"Failed to send UDP message: {e}")
 

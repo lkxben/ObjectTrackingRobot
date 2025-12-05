@@ -1,29 +1,29 @@
 import rclpy
 from rclpy.node import Node
-from robot_msgs.msg import DetectionArray
 from std_msgs.msg import Float32MultiArray, String
 import numpy as np
 import torch
-from yolox.tracker.byte_tracker import BYTETracker, STrack
-from robot_msgs.msg import Detection, DetectionArray
+from yolox.tracker.byte_tracker import BYTETracker
+from robot_msgs.msg import Detection, DetectionArray, Input
 
-class ByteTrackNode(Node):
+class MOTNode(Node):
     def __init__(self):
-        super().__init__('bytetrack_node')
+        super().__init__('mot_node')
         self.det_sub = self.create_subscription(
             DetectionArray,
-            '/detection',
+            '/detection/raw',
             self.detection_callback,
             10
         )
-        self.prompt_sub = self.create_subscription(
-            String,
-            '/prompt/input',
-            self.prompt_callback,
+        self.input_sub = self.create_subscription(
+            Input,
+            '/input',
+            self.input_callback,
             10
         )
 
-        self.track_pub = self.create_publisher(DetectionArray, '/detection/tracked', 10)
+        self.mot_pub = self.create_publisher(DetectionArray, '/detection/mot', 10)
+        self.overlay_pub = self.create_publisher(DetectionArray, '/detection/overlay', 10)
         class TrackerArgs:
             track_thresh = 0.1
             track_buffer = 30
@@ -35,18 +35,25 @@ class ByteTrackNode(Node):
         self.args = TrackerArgs()
         self.tracker = BYTETracker(self.args, frame_rate=30)
         self.frame_id = 0
+        self.prev_prompt = None
+        self.mode = None
 
         self.create_subscription(Float32MultiArray, '/camera/info', self.info_callback, 10)
         self.resolution = (320.0, 240.0)
 
-        self.get_logger().info('ByteTrack Setup - Complete')
+        self.get_logger().info('MOT Setup - Complete')
 
     def info_callback(self, msg):
-        self.resolution = (msg.data[0], msg.data[1])
+        if len(msg.data) >= 2:
+            self.resolution = (msg.data[0], msg.data[1])
 
-    def prompt_callback(self, msg):
-        self.tracker = BYTETracker(self.args, frame_rate=30)
-        self.frame_id = 0
+    def input_callback(self, msg):
+        self.mode = msg.mode
+        self.target_id = msg.target_id
+        if self.prev_prompt != msg.prompt:
+            self.prev_prompt = msg.prompt
+            self.tracker = BYTETracker(self.args, frame_rate=30)
+            self.frame_id = 0
 
     def detection_callback(self, msg):
         if not msg.detections:
@@ -86,7 +93,10 @@ class ByteTrackNode(Node):
                     break
             tracked_msg.detections.append(det)
 
-        self.track_pub.publish(tracked_msg)
+        if self.mode == 'TRACK' and self.target_id != -1:
+            self.mot_pub.publish(tracked_msg)
+        else:
+            self.overlay_pub.publish(tracked_msg)
         self.frame_id += 1
 
     def _bbox_iou(self, boxA, boxB):
@@ -102,7 +112,7 @@ class ByteTrackNode(Node):
 
 def main(args=None):
     rclpy.init(args=args)
-    node = ByteTrackNode()
+    node = MOTNode()
     rclpy.spin(node)
     node.destroy_node()
     rclpy.shutdown()

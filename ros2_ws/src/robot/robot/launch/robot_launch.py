@@ -25,8 +25,13 @@ def generate_launch_description():
         ),
         Node(
             package='robot',
-            executable='bytetrack_node',
-            name='bytetrack_node'
+            executable='mot_node',
+            name='mot_node'
+        ),
+        Node(
+            package='robot',
+            executable='sot_node',
+            name='sot_node'
         ),
         Node(
             package='rosbridge_server',

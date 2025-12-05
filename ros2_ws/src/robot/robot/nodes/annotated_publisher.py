@@ -1,9 +1,9 @@
 import rclpy
 from rclpy.node import Node
 from sensor_msgs.msg import Image, CompressedImage
-from std_msgs.msg import Float32MultiArray
+from std_msgs.msg import Float32MultiArray, Int32
 from cv_bridge import CvBridge
-from robot_msgs.msg import DetectionArray
+from robot_msgs.msg import DetectionArray, Input
 import cv2
 import time
 
@@ -25,20 +25,45 @@ class AnnotatedPublisher(Node):
 
         self.det_sub = self.create_subscription(
             DetectionArray,
-            '/detection/tracked',
+            '/detection/overlay',
             self.detection_callback,
             10
         )
 
+        self.input_sub = self.create_subscription(
+            Int32,
+            '/input',
+            self.input_callback,
+            10
+        )
+
+        self.target_id = -1
+        self.mode = None
         self.pub = self.create_publisher(CompressedImage, '/camera/annotated/compressed', 10)
         self.get_logger().info('Annotated Publisher Setup - Complete')
 
-    def detection_callback(self, msg: DetectionArray):
-        if len(msg.detections) > 0:
-            self.latest_detections = msg.detections
-            self.last_det_time = time.time()
+    def detection_callback(self, msg):
+        if self.mode == 'TRACK' and self.target_id != -1:
+            if len(msg.detections) > 0:
+                for det in msg.detections:
+                    if det.track_id == self.target_id:
+                        da = DetectionArray()
+                        da.detections.append(det)
+                        self.latest_detections = da.detections
+                        self.last_det_time = time.time()
+                        break
+            else:
+                self.latest_detections = []
         else:
-            self.latest_detections = []
+            if len(msg.detections) > 0:
+                self.latest_detections = msg.detections
+                self.last_det_time = time.time()
+            else:
+                self.latest_detections = []
+
+    def input_callback(self, msg):
+        self.mode = msg.mode
+        self.target_id = msg.target_id
 
     def image_callback(self, img_msg):
         try:
