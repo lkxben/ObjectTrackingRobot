@@ -126,16 +126,16 @@ function App() {
           </div>
         </section>
 
-        <section className="prompt-card">
-          <div className="mode-select">
-            <select value={mode} onChange={handleModeChange}>
-              <option value="IDLE">IDLE</option>
-              <option value="MANUAL">MANUAL</option>
-              <option value="TRACK">TRACK</option>
-              <option value="AUTO">AUTO</option>
-            </select>
-          </div>
+        <section className="mode-card">
+          <select value={mode} onChange={handleModeChange}>
+            <option value="IDLE">IDLE</option>
+            <option value="MANUAL">MANUAL</option>
+            <option value="TRACK">TRACK</option>
+            <option value="AUTO">AUTO</option>
+          </select>
+        </section>
 
+        <section className="prompt-card">
           {(mode === 'IDLE' || mode === 'TRACK' || mode === 'AUTO') && (
             <div className="prompt-inputs">
               <input type="text" placeholder="Enter prompts, comma-separated" value={prompt} onChange={e => setPrompt(e.target.value)} />
