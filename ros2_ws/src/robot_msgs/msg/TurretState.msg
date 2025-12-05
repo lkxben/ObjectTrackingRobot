@@ -1,7 +1,6 @@
-string mode            # IDLE | AUTONOMOUS | MANUAL
-string status          # IDLE | SEARCHING | DETECTING | TRACKING | LOST | MANUAL_CONTROL | ERROR
-
-float32 target_id      # currently tracked target ID, -1 if none
-bool has_target        # true if a valid target exists
+string mode
+string status
+string prompt
+Int32 target_id
 
 builtin_interfaces/Time stamp

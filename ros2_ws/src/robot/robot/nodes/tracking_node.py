@@ -4,7 +4,7 @@ from std_msgs.msg import Float32MultiArray, Int32
 import socket
 import os
 from dotenv import load_dotenv
-from robot_msgs.msg import DetectionArray
+from robot_msgs.msg import DetectionArray, Input
 import time
 
 load_dotenv()
@@ -32,10 +32,10 @@ class TrackingNode(Node):
             self.detection_callback,
             10
         )
-        self.trackId_sub = self.create_subscription(
-            Int32,
-            '/tracked/id',
-            self.trackId_callback,
+        self.input_sub = self.create_subscription(
+            Input,
+            '/input',
+            self.input_callback,
             10
         )
         self.trackId = -1
@@ -51,9 +51,9 @@ class TrackingNode(Node):
         if len(msg.data) >= 2:
             self.resolution = (msg.data[0], msg.data[1])
 
-    def trackId_callback(self, msg):
-        self.get_logger().info(f"Received track ID: {msg.data}")
-        self.trackId = msg.data
+    def input_callback(self, msg):
+        self.get_logger().info(f"Received track ID: {msg.target_id}")
+        self.trackId = msg.target_id
         
     def detection_callback(self, msg):
         now = time.time()
