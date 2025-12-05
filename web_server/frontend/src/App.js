@@ -91,7 +91,7 @@ function App() {
     setPrompt('');
     setTargetId('');
     setTrackingStatus('');
-    sendInput({ prompt: "__EMPTY__" });
+    sendInput({ prompt: "__EMPTY__", target_id: -999 });
   };
 
   const handleTargetIdSubmit = () => {

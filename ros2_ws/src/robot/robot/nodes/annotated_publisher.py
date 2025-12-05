@@ -1,9 +1,8 @@
 import rclpy
 from rclpy.node import Node
 from sensor_msgs.msg import Image, CompressedImage
-from std_msgs.msg import Float32MultiArray, Int32
 from cv_bridge import CvBridge
-from robot_msgs.msg import DetectionArray, Input
+from robot_msgs.msg import DetectionArray, TurretState
 import cv2
 import time
 
@@ -30,23 +29,26 @@ class AnnotatedPublisher(Node):
             10
         )
 
-        self.input_sub = self.create_subscription(
-            Int32,
-            '/input',
-            self.input_callback,
+        self.state_sub = self.create_subscription(
+            TurretState,
+            '/turret/state',
+            self.state_callback,
             10
         )
 
-        self.target_id = -1
-        self.mode = None
+        self.state = TurretState()
+        self.state.mode = "IDLE"
+        self.state.prompt = ""
+        self.state.target_id = -1
+        self.state.stamp = self.get_clock().now().to_msg()
         self.pub = self.create_publisher(CompressedImage, '/camera/annotated/compressed', 10)
         self.get_logger().info('Annotated Publisher Setup - Complete')
 
     def detection_callback(self, msg):
-        if self.mode == 'TRACK' and self.target_id != -1:
+        if self.state.mode == 'TRACK' and self.state.target_id != -1:
             if len(msg.detections) > 0:
                 for det in msg.detections:
-                    if det.track_id == self.target_id:
+                    if det.track_id == self.state.target_id:
                         da = DetectionArray()
                         da.detections.append(det)
                         self.latest_detections = da.detections
@@ -61,9 +63,8 @@ class AnnotatedPublisher(Node):
             else:
                 self.latest_detections = []
 
-    def input_callback(self, msg):
-        self.mode = msg.mode
-        self.target_id = msg.target_id
+    def state_callback(self, msg):
+        self.state = msg
 
     def image_callback(self, img_msg):
         try:

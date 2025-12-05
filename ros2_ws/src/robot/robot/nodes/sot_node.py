@@ -2,7 +2,7 @@ import rclpy
 from rclpy.node import Node
 from sensor_msgs.msg import Image
 from std_msgs.msg import Int32
-from robot_msgs.msg import Detection, DetectionArray, Input
+from robot_msgs.msg import Detection, DetectionArray, TurretState, TurretEvent
 from cv_bridge import CvBridge
 import cv2
 import sys
@@ -24,7 +24,6 @@ class SOTNode(Node):
         self.pending_bbox = None
         self.tracker_state = None
         self.target_class = None
-        self.mode = None
 
         self.net = SiamRPNBIG()
         self.net.load_state_dict(torch.load('/root/DaSiamRPN/code/SiamRPNBIG.model', map_location=torch.device('cpu'), weights_only=False))
@@ -33,17 +32,26 @@ class SOTNode(Node):
         self.det_sub = self.create_subscription(
             DetectionArray, '/detection/mot', self.detection_callback, 10)
         self.input_sub = self.create_subscription(
-            Input, '/input', self.input_callback, 10)
+            TurretState, '/turret/state', self.state_callback, 10)
         self.image_sub = self.create_subscription(
             Image, '/camera/image_raw', self.image_callback, 10)
 
         self.track_pub = self.create_publisher(
             DetectionArray, '/detection/overlay', 10)
+        self.event_pub = self.create_publisher(
+            TurretEvent, '/turret/event', 10
+        )
+
+        self.state = TurretState()
+        self.state.mode = "IDLE"
+        self.state.prompt = ""
+        self.state.target_id = -1
+        self.state.stamp = self.get_clock().now().to_msg()
 
         self.get_logger().info("SOT (DaSiamRPN) Node Initialized")
 
-    def input_callback(self, msg):
-        self.mode = msg.mode
+    def state_callback(self, msg):
+        self.state = msg
         self.active_target_id = msg.target_id
         self.tracker_state = None
         self.target_class = None
@@ -51,7 +59,7 @@ class SOTNode(Node):
         self.get_logger().info(f"Selected object ID: {msg.target_id}")
 
     def detection_callback(self, msg):
-        if self.mode != 'TRACK' or self.active_target_id is None or self.tracker_state is not None:
+        if self.state.mode != 'TRACK' or self.active_target_id is None or self.tracker_state is not None:
             return
 
         for det in msg.detections:
@@ -66,7 +74,7 @@ class SOTNode(Node):
                 break
 
     def image_callback(self, msg):
-        if self.active_target_id is None or self.mode != 'TRACK':
+        if self.active_target_id is None or self.state.mode != 'TRACK':
             return
 
         frame = self.bridge.imgmsg_to_cv2(msg, desired_encoding='bgr8')

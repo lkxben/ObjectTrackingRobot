@@ -4,7 +4,7 @@ from std_msgs.msg import Float32MultiArray, Int32
 import socket
 import os
 from dotenv import load_dotenv
-from robot_msgs.msg import DetectionArray, Input
+from robot_msgs.msg import DetectionArray, TurretState
 import time
 
 load_dotenv()
@@ -32,13 +32,18 @@ class TrackingNode(Node):
             self.detection_callback,
             10
         )
-        self.input_sub = self.create_subscription(
-            Input,
-            '/input',
-            self.input_callback,
+        self.state_sub = self.create_subscription(
+            TurretState,
+            '/turret/state',
+            self.state_callback,
             10
         )
-        self.trackId = -1
+        self.state = TurretState()
+        self.state.mode = "IDLE"
+        self.state.prompt = ""
+        self.state.target_id = -1
+        self.state.stamp = self.get_clock().now().to_msg()
+        
         self.resolution = (320, 240)
         self.create_subscription(Float32MultiArray, '/camera/info', self.info_callback, 10)
         self.max_angle = 90.0
@@ -51,9 +56,8 @@ class TrackingNode(Node):
         if len(msg.data) >= 2:
             self.resolution = (msg.data[0], msg.data[1])
 
-    def input_callback(self, msg):
-        self.get_logger().info(f"Received track ID: {msg.target_id}")
-        self.trackId = msg.target_id
+    def state_callback(self, msg):
+        self.state = msg
         
     def detection_callback(self, msg):
         now = time.time()
@@ -62,12 +66,12 @@ class TrackingNode(Node):
         
         tracked_det = None
         for det in msg.detections:
-            if det.track_id == self.trackId:
+            if det.track_id == self.state.target_id:
                 tracked_det = det
                 break
         
         if not tracked_det:
-            self.get_logger().debug(f"No detection matches id {self.trackId}")
+            self.get_logger().debug(f"No detection matches id {self.state.target_id}")
             return
         
         mid_x = (tracked_det.x1 + tracked_det.x2) / 2
