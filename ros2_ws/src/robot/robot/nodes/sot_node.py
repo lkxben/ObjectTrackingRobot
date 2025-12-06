@@ -118,13 +118,15 @@ class SOTNode(Node):
             arr_msg = DetectionArray()
             arr_msg.detections.append(det_msg)
             self.track_pub.publish(arr_msg)
-            # self.get_logger().info(str(arr_msg))
 
     def publish_event(self, event_type):
         msg = TurretEvent()
         msg.event = event_type
         msg.target_id = -1
         msg.prompt = ""
+        msg.clear_prompt = False
+        msg.clear_target_id = event_type == "lost_object" 
+        msg.message = self.target_class
         msg.stamp = self.get_clock().now().to_msg()
         self.event_pub.publish(msg)
         self.get_logger().info(f"[EVENT] {str(msg)}")

@@ -12,6 +12,11 @@ BACKEND_TOPICS = [
     {"topic": "/input", "type": "robot_msgs/Input" }
 ]
 
+LOCAL_TOPICS = [
+    {"topic": "/camera/annotated/compressed", "type": "sensor_msgs/CompressedImage", "throttle_rate": 0, "fragment_size": 64000},
+    {"topic": "/turret/log", "type": "robot_msgs/TurretLog"}
+]
+
 backend_to_local_queue = queue.Queue(maxsize=200)
 
 
@@ -43,14 +48,18 @@ def start_tunnel():
         ws_local = connect(LOCAL)
         ws_backend = connect(BACKEND)
 
-        sub = {
-            "op": "subscribe",
-            "topic": "/camera/annotated/compressed",
-            "type": "sensor_msgs/CompressedImage",
-            "throttle_rate": 0,
-            "fragment_size": 64000
-        }
-        ws_local.send(json.dumps(sub))
+        for t in LOCAL_TOPICS:
+            sub = {
+                "op": "subscribe",
+                "topic": t["topic"],
+                "type": t["type"]
+            }
+            if "throttle_rate" in t:
+                sub["throttle_rate"] = t["throttle_rate"]
+            if "fragment_size" in t:
+                sub["fragment_size"] = t["fragment_size"]
+
+            ws_local.send(json.dumps(sub))
 
         advertise_topics(ws_local)
 

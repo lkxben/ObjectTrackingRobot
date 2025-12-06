@@ -11,6 +11,8 @@ function App() {
   const [mode, setMode] = useState('IDLE');
   const [prompt, setPrompt] = useState('');
   const [targetId, setTargetId] = useState('');
+  const [eventLogs, setEventLogs] = useState([]);
+  const [filterLevel, setFilterLevel] = useState('all');
 
   const imgRef = useRef(null);
   const lastImageTimeRef = useRef(Date.now());
@@ -20,6 +22,22 @@ function App() {
   const rosRef = useRef(null);
   const cameraTopicRef = useRef(null);
   const inputTopicRef = useRef(null);
+  const logTopicRef = useRef(null);
+  const consoleRef = useRef(null);
+
+  const severityRank = {
+    debug: 1,
+    info: 2,
+    warning: 3,
+    error: 4,
+  };
+
+  // auto scroll log
+  useEffect(() => {
+    if (consoleRef.current) {
+      consoleRef.current.scrollTop = consoleRef.current.scrollHeight;
+    }
+  }, [eventLogs]);
 
   useEffect(() => {
     const ros = new ROSLIB.Ros({ url: 'wss://objecttrackingrobot.onrender.com/rosbridge?client=frontend' });
@@ -32,6 +50,22 @@ function App() {
       ros,
       name: '/input',
       messageType: 'robot_msgs/Input',
+    });
+    logTopicRef.current = new ROSLIB.Topic({
+      ros,
+      name: '/turret/log',
+      messageType: 'robot_msgs/TurretLog'
+    });
+    logTopicRef.current.subscribe((msg) => {
+      const logEntry = {
+        level: msg.level,
+        message: `[${new Date(msg.stamp.sec * 1000).toLocaleTimeString()}] ${msg.message}`
+      };
+
+      setEventLogs(prev => {
+        const newLogs = [...prev, logEntry].slice(-100);
+        return newLogs;
+      });
     });
     
     cameraTopicRef.current = new ROSLIB.Topic({ ros, name: '/camera/annotated/compressed', messageType: 'sensor_msgs/CompressedImage' });
@@ -81,6 +115,7 @@ function App() {
     setPrompt('');
     setTargetId('');
     setTrackingStatus('');
+    setEventLogs([]);
 
     sendInput({ mode: newMode, clearPrompt: true, clearTarget: true });
   };
@@ -104,6 +139,10 @@ function App() {
   };
 
   const streamActive = rosStatus === 'Online' && Date.now() - lastImageTimeRef.current < 5000;
+  const filteredLogs = eventLogs.filter(log => {
+    if (filterLevel === 'all') return true;
+    return severityRank[log.level] >= severityRank[filterLevel];
+  });
 
   return (
     <div className="dashboard-container">
@@ -129,19 +168,24 @@ function App() {
           </div>
         </section>
 
-        <section className="mode-card">
-          <select value={mode} onChange={handleModeChange}>
-            <option value="IDLE">IDLE</option>
-            <option value="MANUAL">MANUAL</option>
-            <option value="TRACK">TRACK</option>
-            <option value="AUTO">AUTO</option>
-          </select>
-        </section>
+        <section className="input-card">
+          <div className="mode-card">
+            <select value={mode} onChange={handleModeChange}>
+              <option value="IDLE">IDLE</option>
+              <option value="MANUAL">MANUAL</option>
+              <option value="TRACK">TRACK</option>
+              <option value="AUTO">AUTO</option>
+            </select>
+          </div>
 
-        <section className="prompt-card">
           {(mode === 'IDLE' || mode === 'TRACK' || mode === 'AUTO') && (
             <div className="prompt-inputs">
-              <input type="text" placeholder="Enter prompts, comma-separated" value={prompt} onChange={e => setPrompt(e.target.value)} />
+              <input
+                type="text"
+                placeholder="Enter prompts, comma-separated"
+                value={prompt}
+                onChange={e => setPrompt(e.target.value)}
+              />
               <button onClick={handlePromptSubmit}>Prompt</button>
               <button onClick={handleClearPrompt}>Clear</button>
             </div>
@@ -149,12 +193,55 @@ function App() {
 
           {mode === 'TRACK' && (
             <div className="track-inputs">
-              <input type="number" placeholder="Enter target ID" value={targetId} onChange={e => setTargetId(e.target.value)} />
+              <input
+                type="number"
+                placeholder="Enter target ID"
+                value={targetId}
+                onChange={e => setTargetId(e.target.value)}
+              />
               <button onClick={handleTargetIdSubmit}>Track ID</button>
             </div>
           )}
 
-          {trackingStatus && <div className="tracking-status">{trackingStatus}</div>}
+          {trackingStatus && (
+            <div className="tracking-status">
+              {trackingStatus}
+            </div>
+          )}
+        </section>
+
+        {/* <section className="event-console" ref={consoleRef}>
+          <h3>Event Log</h3>
+          <div className="log-messages">
+            {eventLogs.map((log, idx) => (
+              <div 
+                key={idx} 
+                className={log.includes("tracking_object") ? "tracking_object" :
+                            log.includes("lost_object") ? "lost_object" : "info"}>
+                {log}
+              </div>
+            ))}
+          </div>
+        </section> */}
+        <section className="event-console">
+          <div className="event-console-header">
+            <h3>Event Log</h3>
+            <select value={filterLevel} onChange={e => setFilterLevel(e.target.value)}>
+              <option value="all">All</option>
+              <option value="debug">Debug</option>
+              <option value="info">Info</option>
+              <option value="warning">Warning</option>
+              <option value="error">Error</option>
+            </select>
+          </div>
+
+          <div className="log-messages" ref={consoleRef}>
+            {filteredLogs.map((log, idx) => (
+              <div key={idx} className={log.level}>
+                {log.message}
+              </div>
+            ))}
+          </div>
         </section>
       </main>
     </div>
