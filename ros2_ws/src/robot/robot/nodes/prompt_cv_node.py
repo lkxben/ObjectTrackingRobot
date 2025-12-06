@@ -94,6 +94,7 @@ class PromptCVNode(Node):
             if self.stable_counter[class_name] >= self.STABLE_FRAMES:
                 event_msg = TurretEvent()
                 event_msg.event = "object_detected"
+                event_msg.target_id = -1
                 event_msg.stamp = self.get_clock().now().to_msg()
                 event_msg.message = class_name
                 self.event_pub.publish(event_msg)

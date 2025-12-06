@@ -36,19 +36,16 @@ class AnnotatedPublisher(Node):
             10
         )
 
-        self.state = TurretState()
-        self.state.mode = "IDLE"
-        self.state.prompt = ""
-        self.state.target_id = -1
-        self.state.stamp = self.get_clock().now().to_msg()
+        self.target_id = -1
+        self.mode = None
         self.pub = self.create_publisher(CompressedImage, '/camera/annotated/compressed', 10)
         self.get_logger().info('Annotated Publisher Setup - Complete')
 
     def detection_callback(self, msg):
-        if self.state.mode == 'TRACK' and self.state.target_id != -1:
+        if self.mode == 'TRACK' and self.target_id != -1:
             if len(msg.detections) > 0:
                 for det in msg.detections:
-                    if det.track_id == self.state.target_id:
+                    if det.track_id == self.target_id:
                         da = DetectionArray()
                         da.detections.append(det)
                         self.latest_detections = da.detections
@@ -64,7 +61,8 @@ class AnnotatedPublisher(Node):
                 self.latest_detections = []
 
     def state_callback(self, msg):
-        self.state = msg
+        self.mode = msg.mode
+        self.target_id = msg.target_id
 
     def image_callback(self, img_msg):
         try:

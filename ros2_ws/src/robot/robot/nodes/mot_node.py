@@ -15,7 +15,7 @@ class MOTNode(Node):
             self.detection_callback,
             10
         )
-        self.input_sub = self.create_subscription(
+        self.state_sub = self.create_subscription(
             TurretState,
             '/turret/state',
             self.state_callback,
@@ -36,12 +36,7 @@ class MOTNode(Node):
         self.tracker = BYTETracker(self.args, frame_rate=30)
         self.frame_id = 0
         self.prev_prompt = None
-
-        self.state = TurretState()
-        self.state.mode = "IDLE"
-        self.state.prompt = ""
-        self.state.target_id = -1
-        self.state.stamp = self.get_clock().now().to_msg()
+        self.mode = None
 
         self.create_subscription(Float32MultiArray, '/camera/info', self.info_callback, 10)
         self.resolution = (320.0, 240.0)
@@ -53,7 +48,8 @@ class MOTNode(Node):
             self.resolution = (msg.data[0], msg.data[1])
 
     def state_callback(self, msg):
-        self.state = msg
+        self.mode = msg.mode
+        self.target_id = msg.target_id
         if self.prev_prompt != msg.prompt:
             self.prev_prompt = msg.prompt
             self.tracker = BYTETracker(self.args, frame_rate=30)
@@ -97,7 +93,7 @@ class MOTNode(Node):
                     break
             tracked_msg.detections.append(det)
 
-        if self.state.mode == 'TRACK' and self.state.target_id != -1:
+        if self.mode == 'TRACK' and self.target_id != -1:
             self.mot_pub.publish(tracked_msg)
         else:
             self.overlay_pub.publish(tracked_msg)

@@ -28,7 +28,7 @@ class TrackingNode(Node):
         super().__init__('tracking_node')
         self.det_sub = self.create_subscription(
             DetectionArray,
-            '/detection/sot',
+            '/detection/overlay',
             self.detection_callback,
             10
         )
@@ -38,12 +38,7 @@ class TrackingNode(Node):
             self.state_callback,
             10
         )
-        self.state = TurretState()
-        self.state.mode = "IDLE"
-        self.state.prompt = ""
-        self.state.target_id = -1
-        self.state.stamp = self.get_clock().now().to_msg()
-        
+        self.target_id = -1
         self.resolution = (320, 240)
         self.create_subscription(Float32MultiArray, '/camera/info', self.info_callback, 10)
         self.max_angle = 90.0
@@ -57,7 +52,8 @@ class TrackingNode(Node):
             self.resolution = (msg.data[0], msg.data[1])
 
     def state_callback(self, msg):
-        self.state = msg
+        if msg.target_id != -1:
+            self.target_id = msg.target_id
         
     def detection_callback(self, msg):
         now = time.time()
@@ -66,12 +62,12 @@ class TrackingNode(Node):
         
         tracked_det = None
         for det in msg.detections:
-            if det.track_id == self.state.target_id:
+            if det.track_id == self.target_id:
                 tracked_det = det
                 break
         
         if not tracked_det:
-            self.get_logger().debug(f"No detection matches id {self.state.target_id}")
+            self.get_logger().debug(f"No detection matches id {self.target_id}")
             return
         
         mid_x = (tracked_det.x1 + tracked_det.x2) / 2
@@ -95,7 +91,7 @@ class TrackingNode(Node):
         try:
             sock.sendto(udpmsg.encode(), (ESP32_IP, ESP32_PORT))
             self.last_sent_time = now
-            self.get_logger().info(f"Sent UDP message: {udpmsg} to {ESP32_IP}:{ESP32_PORT}")
+            # self.get_logger().info(f"Sent UDP message: {udpmsg} to {ESP32_IP}:{ESP32_PORT}")
         except Exception as e:
             self.get_logger().error(f"Failed to send UDP message: {e}")
 

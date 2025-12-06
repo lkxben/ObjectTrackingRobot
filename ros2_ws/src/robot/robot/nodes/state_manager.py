@@ -9,7 +9,6 @@ class StateManager(Node):
 
         self.state = TurretState()
         self.state.mode = "IDLE"
-        # self.state.status = "IDLE"
         self.state.prompt = ""
         self.state.target_id = -1
         self.state.stamp = self.get_clock().now().to_msg()
@@ -24,7 +23,6 @@ class StateManager(Node):
             self.event_callback,
             10
         )
-        self.state_pub.publish(self.state)
 
         self.get_logger().info('StateManager started')
 
@@ -36,6 +34,7 @@ class StateManager(Node):
         if msg.target_id != -1:
             self.state.target_id = -1 if msg.target_id == -999 else msg.target_id
         self.state.stamp = self.get_clock().now().to_msg()
+        self.get_logger().info("Input publishing state: " + str(self.state))
         self.state_pub.publish(self.state)
         
     def event_callback(self, msg: TurretEvent):
@@ -49,12 +48,17 @@ class StateManager(Node):
         if msg.target_id != -1:
             self.state.target_id = msg.target_id
         else:
-            self.state.target = prev_state.prompt
+            self.state.target_id = prev_state.target_id
 
         # self.update_status(prev_state, msg)
 
         self.state.stamp = self.get_clock().now().to_msg()
-        self.state_pub.publish(self.state)
+
+        if (self.state.prompt != prev_state.prompt or
+            self.state.target_id != prev_state.target_id or 
+            self.state.mode != prev_state.mode):
+            self.get_logger().info("Event publishing state: " + str(self.state))
+            self.state_pub.publish(self.state)
 
     # def update_status(self, prev_state: TurretState, event: TurretEvent):
     #     mode = self.state.mode
@@ -112,11 +116,6 @@ class StateManager(Node):
 def main(args=None):
     rclpy.init(args=args)
     node = StateManager()
-    try:
-        rclpy.spin(node)
-    except KeyboardInterrupt:
-        pass
+    rclpy.spin(node)
+    node.destroy_node()
     rclpy.shutdown()
-
-if __name__ == "__main__":
-    main()

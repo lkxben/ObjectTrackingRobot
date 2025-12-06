@@ -62,14 +62,17 @@ function App() {
     return () => clearInterval(interval);
   }, []);
 
-  const sendInput = ({ mode, prompt, target_id }) => {
-    const msg = {
+  const sendInput = ({ mode, prompt, targetId, clearPrompt, clearTarget }) => {
+    const msg = new ROSLIB.Message({
       mode: mode ?? "",
-      prompt: prompt ?? "__NONE__",
-      target_id: target_id !== undefined ? parseInt(target_id, 10) : -1
-    };
-    inputTopicRef.current.publish(new ROSLIB.Message(msg));
-  }
+      prompt: prompt ?? "",
+      target_id: targetId !== undefined ? parseInt(targetId, 10) : -1,
+      clear_prompt: !!clearPrompt,
+      clear_target_id: !!clearTarget
+    });
+
+    inputTopicRef.current.publish(msg);
+  };
 
   const handleModeChange = (e) => {
     const newMode = e.target.value;
@@ -79,7 +82,7 @@ function App() {
     setTargetId('');
     setTrackingStatus('');
 
-    sendInput({ mode: newMode });
+    sendInput({ mode: newMode, clearPrompt: true, clearTarget: true });
   };
 
   const handlePromptSubmit = () => {
@@ -91,7 +94,7 @@ function App() {
     setPrompt('');
     setTargetId('');
     setTrackingStatus('');
-    sendInput({ prompt: "__EMPTY__", target_id: -999 });
+    sendInput({ clearPrompt: true, clearTarget: true });
   };
 
   const handleTargetIdSubmit = () => {
