@@ -1,6 +1,6 @@
 import rclpy
 from rclpy.node import Node
-from robot_msgs.msg import TurretEvent, TurretLog
+from robot_msgs.msg import TurretEvent, TurretLog, TurretState
 
 class LoggingNode(Node):
     def __init__(self):
@@ -12,24 +12,34 @@ class LoggingNode(Node):
             self.event_callback,
             10
         )
+        self.state_sub = self.create_subscription(
+            TurretState,
+            '/turret/state',
+            self.state_callback,
+            10
+        )
+        self.state = TurretState()
         self.get_logger().info("Logging Node started")
+
+    def state_callback(self, msg: TurretState):
+        self.state = msg
 
     def event_callback(self, msg: TurretEvent):
         log_msg = TurretLog()
         log_msg.stamp = self.get_clock().now().to_msg()
 
-        if msg.event in ["lost_object"]:
-            log_msg.level = "warning"
-        else:
-            log_msg.level = "info"
+        log_msg.level = "info"
 
         if msg.event == "lost_object":
-            log_msg.message = f"Lost track of {msg.message} object"
-        if msg.event == "tracking_object":
-            log_msg.message= f"Tracking {msg.message} object with ID: {msg.target_id}"
-        if msg.event == "object_detected":
-            log_msg.message = f"{msg.message} object detected"
-        self.get_logger().info(str(log_msg))
+            log_msg.level = "warning"
+            log_msg.message = f"Lost track of '{self.state.prompt}' (ID: {self.state.target_id})"
+        elif msg.event == "tracking_object":
+            log_msg.message= f"Tracking '{self.state.prompt}' (ID: {self.state.target_id})"
+        elif msg.event == "object_detected":
+            log_msg.message = f"Detected '{msg.message}'"
+        else:
+            log_msg.message = f"{msg.event}: {msg.message}"
+        
         self.log_pub.publish(log_msg)
 
 def main(args=None):

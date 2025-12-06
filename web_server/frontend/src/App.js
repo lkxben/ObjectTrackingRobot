@@ -140,7 +140,6 @@ function App() {
 
   const streamActive = rosStatus === 'Online' && Date.now() - lastImageTimeRef.current < 5000;
   const filteredLogs = eventLogs.filter(log => {
-    if (filterLevel === 'all') return true;
     return severityRank[log.level] >= severityRank[filterLevel];
   });
 
@@ -210,24 +209,10 @@ function App() {
           )}
         </section>
 
-        {/* <section className="event-console" ref={consoleRef}>
-          <h3>Event Log</h3>
-          <div className="log-messages">
-            {eventLogs.map((log, idx) => (
-              <div 
-                key={idx} 
-                className={log.includes("tracking_object") ? "tracking_object" :
-                            log.includes("lost_object") ? "lost_object" : "info"}>
-                {log}
-              </div>
-            ))}
-          </div>
-        </section> */}
         <section className="event-console">
           <div className="event-console-header">
             <h3>Event Log</h3>
             <select value={filterLevel} onChange={e => setFilterLevel(e.target.value)}>
-              <option value="all">All</option>
               <option value="debug">Debug</option>
               <option value="info">Info</option>
               <option value="warning">Warning</option>
