@@ -4,7 +4,9 @@ from std_msgs.msg import Float32MultiArray, String
 import numpy as np
 import torch
 from yolox.tracker.byte_tracker import BYTETracker
-from robot_msgs.msg import Detection, DetectionArray, TurretState
+from robot_msgs.msg import Detection, DetectionArray, TurretState, TurretEvent
+from collections import defaultdict
+import time
 
 class MOTNode(Node):
     def __init__(self):
@@ -24,6 +26,7 @@ class MOTNode(Node):
 
         self.mot_pub = self.create_publisher(DetectionArray, '/detection/mot', 10)
         self.overlay_pub = self.create_publisher(DetectionArray, '/detection/overlay', 10)
+        self.event_pub = self.create_publisher(TurretEvent, '/turret/event', 10)
         class TrackerArgs:
             track_thresh = 0.1
             track_buffer = 30
@@ -37,6 +40,12 @@ class MOTNode(Node):
         self.frame_id = 0
         self.prev_prompt = None
         self.mode = None
+
+        self.STABLE_FRAMES = 10
+        self.MIN_EVENT_INTERVAL = 1 
+        self.detected_classes = set()
+        self.stable_counter = defaultdict(int)
+        self.last_event_time = defaultdict(lambda: 0)
 
         self.create_subscription(Float32MultiArray, '/camera/info', self.info_callback, 10)
         self.resolution = (320.0, 240.0)
@@ -54,6 +63,8 @@ class MOTNode(Node):
             self.prev_prompt = msg.prompt
             self.tracker = BYTETracker(self.args, frame_rate=30)
             self.frame_id = 0
+            self.detected_classes.clear()
+            self.stable_counter.clear()
 
     def detection_callback(self, msg):
         if not msg.detections:
@@ -79,6 +90,7 @@ class MOTNode(Node):
         online_targets = self.tracker.update(output_results, img_info, img_size)
 
         tracked_msg = DetectionArray()
+        current_classes = set()
         for t in online_targets:
             det = Detection()
             det.x1, det.y1, det.x2, det.y2 = t.tlbr
@@ -90,8 +102,47 @@ class MOTNode(Node):
                 if iou > 0.5:
                     det.class_id = orig_det.class_id
                     det.class_name = orig_det.class_name
+                    current_classes.add(det.class_name)
                     break
             tracked_msg.detections.append(det)
+
+        if self.mode == 'AUTO' and tracked_msg.detections:
+            best_det = max(tracked_msg.detections, key=lambda d: d.confidence)
+            event_msg = TurretEvent()
+            event_msg.event = "object_detected"
+            event_msg.prompt = ""
+            event_msg.target_id = best_det.track_id
+            event_msg.clear_prompt = False
+            event_msg.clear_target_id = False
+            event_msg.stamp = self.get_clock().now().to_msg()
+            event_msg.message = best_det.class_name
+            self.event_pub.publish(event_msg)
+
+            # update internal mode to TRACK
+            self.mode = 'TRACK'
+            self.target_id = best_det.track_id
+
+        now = time.time()
+        for class_name in current_classes:
+            if class_name in self.detected_classes:
+                continue
+            self.stable_counter[class_name] += 1
+            if self.stable_counter[class_name] >= self.STABLE_FRAMES:
+                event_msg = TurretEvent()
+                event_msg.event = "object_detected"
+                event_msg.prompt = ""
+                event_msg.target_id = -1
+                event_msg.clear_prompt = False
+                event_msg.clear_target_id = False
+                event_msg.stamp = self.get_clock().now().to_msg()
+                event_msg.message = class_name
+                self.event_pub.publish(event_msg)
+                self.detected_classes.add(class_name)
+                self.last_event_time[class_name] = now
+
+        for class_name in list(self.stable_counter.keys()):
+            if class_name not in current_classes:
+                self.stable_counter[class_name] = 0
 
         if self.mode == 'TRACK' and self.target_id != -1:
             self.mot_pub.publish(tracked_msg)

@@ -21,7 +21,7 @@ FOV_Y = 75.0
 MAX_STEP = 3.5
 # SMOOTHING = 0.3
 DEADZONE = 0.15
-FREQUENCY = 60.0
+FREQUENCY = 20.0
 
 class TrackingNode(Node):
     def __init__(self):
@@ -39,6 +39,7 @@ class TrackingNode(Node):
             10
         )
         self.target_id = -1
+        self.mode = None
         self.resolution = (320, 240)
         self.create_subscription(Float32MultiArray, '/camera/info', self.info_callback, 10)
         self.max_angle = 90.0
@@ -52,10 +53,13 @@ class TrackingNode(Node):
             self.resolution = (msg.data[0], msg.data[1])
 
     def state_callback(self, msg):
-        if msg.target_id != -1:
-            self.target_id = msg.target_id
+        self.target_id = msg.target_id
+        self.mode = msg.mode
         
     def detection_callback(self, msg):
+        if self.mode != 'TRACK':
+            return
+
         now = time.time()
         if now - self.last_sent_time < self.update_interval:
             return
@@ -91,7 +95,7 @@ class TrackingNode(Node):
         try:
             sock.sendto(udpmsg.encode(), (ESP32_IP, ESP32_PORT))
             self.last_sent_time = now
-            # self.get_logger().info(f"Sent UDP message: {udpmsg} to {ESP32_IP}:{ESP32_PORT}")
+            self.get_logger().info(f"[TRACKING] Sent UDP message: {udpmsg}")
         except Exception as e:
             self.get_logger().error(f"Failed to send UDP message: {e}")
 

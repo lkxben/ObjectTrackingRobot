@@ -116,8 +116,9 @@ function App() {
     setTargetId('');
     setTrackingStatus('');
     setEventLogs([]);
-
-    sendInput({ mode: newMode, clearPrompt: true, clearTarget: true });
+    if (newMode !== 'AUTO') {
+      sendInput({ mode: newMode, clearPrompt: true, clearTarget: true });
+    }
   };
 
   const handlePromptSubmit = () => {
@@ -176,6 +177,21 @@ function App() {
               <option value="AUTO">AUTO</option>
             </select>
           </div>
+
+          {mode === 'AUTO' && (
+            <div className="auto-controls">
+              <button
+                onClick={() => {
+                  if (!prompt.trim()) return;
+                  sendInput({ mode: 'AUTO', prompt, clearPrompt: false, clearTarget: true });
+                  setTrackingStatus(`Auto tracking "${prompt}"`);
+                }}
+                disabled={!prompt.trim()}
+              >
+                Start AUTO
+              </button>
+            </div>
+          )}
 
           {(mode === 'IDLE' || mode === 'TRACK' || mode === 'AUTO') && (
             <div className="prompt-inputs">

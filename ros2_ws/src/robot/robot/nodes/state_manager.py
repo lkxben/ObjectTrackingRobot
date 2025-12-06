@@ -66,6 +66,13 @@ class StateManager(Node):
         elif msg.target_id != -1:
             self.state.target_id = msg.target_id
 
+        if prev_mode == "AUTO" and msg.event == "object_detected" and msg.target_id != -1:
+            self.state.mode = "TRACK"
+
+        if prev_mode == "TRACK" and msg.event == "lost_object":
+            self.state.mode = "AUTO"
+            self.state.target_id = -1
+
         self.state.stamp = self.get_clock().now().to_msg()
 
         if (self.state.prompt != prev_prompt or
