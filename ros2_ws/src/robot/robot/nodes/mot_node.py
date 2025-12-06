@@ -4,7 +4,7 @@ from std_msgs.msg import Float32MultiArray, String
 import numpy as np
 import torch
 from yolox.tracker.byte_tracker import BYTETracker
-from robot_msgs.msg import Detection, DetectionArray, Input
+from robot_msgs.msg import Detection, DetectionArray, TurretState
 
 class MOTNode(Node):
     def __init__(self):
@@ -15,10 +15,10 @@ class MOTNode(Node):
             self.detection_callback,
             10
         )
-        self.input_sub = self.create_subscription(
-            Input,
-            '/input',
-            self.input_callback,
+        self.state_sub = self.create_subscription(
+            TurretState,
+            '/turret/state',
+            self.state_callback,
             10
         )
 
@@ -47,7 +47,7 @@ class MOTNode(Node):
         if len(msg.data) >= 2:
             self.resolution = (msg.data[0], msg.data[1])
 
-    def input_callback(self, msg):
+    def state_callback(self, msg):
         self.mode = msg.mode
         self.target_id = msg.target_id
         if self.prev_prompt != msg.prompt:

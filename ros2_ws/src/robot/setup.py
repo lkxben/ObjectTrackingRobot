@@ -20,7 +20,9 @@ setup(
             'tracking_node = robot.nodes.tracking_node:main',
             'prompt_cv_node = robot.nodes.prompt_cv_node:main',
             'mot_node = robot.nodes.mot_node:main',
-            'sot_node = robot.nodes.sot_node:main'
+            'sot_node = robot.nodes.sot_node:main',
+            'state_manager = robot.nodes.state_manager:main',
+            'logging_node = robot.nodes.logging_node:main'
         ],
     }, data_files=[
         ('share/ament_index/resource_index/packages',

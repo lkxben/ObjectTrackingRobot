@@ -34,6 +34,16 @@ def generate_launch_description():
             name='sot_node'
         ),
         Node(
+            package='robot',
+            executable='state_manager',
+            name='state_manager'
+        ),
+        Node(
+            package='robot',
+            executable='logging_node',
+            name='logging_node'
+        ),
+        Node(
             package='rosbridge_server',
             executable='rosbridge_websocket',
             name='rosbridge_websocket',

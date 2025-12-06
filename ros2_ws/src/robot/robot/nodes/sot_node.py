@@ -2,8 +2,9 @@ import rclpy
 from rclpy.node import Node
 from sensor_msgs.msg import Image
 from std_msgs.msg import Int32
-from robot_msgs.msg import Detection, DetectionArray, Input
+from robot_msgs.msg import Detection, DetectionArray, TurretState, TurretEvent
 from cv_bridge import CvBridge
+import time
 import cv2
 import sys
 import torch
@@ -20,11 +21,14 @@ class SOTNode(Node):
         super().__init__('sot_node')
 
         self.bridge = CvBridge()
-        self.active_target_id = None
+        self.active_target_id = -1
         self.pending_bbox = None
         self.tracker_state = None
         self.target_class = None
         self.mode = None
+        self.last_seen = 0
+        self.MAX_LOST_TIME = 2.0
+        self.CONFIDENCE_THRESHOLD = 0.25
 
         self.net = SiamRPNBIG()
         self.net.load_state_dict(torch.load('/root/DaSiamRPN/code/SiamRPNBIG.model', map_location=torch.device('cpu'), weights_only=False))
@@ -33,25 +37,27 @@ class SOTNode(Node):
         self.det_sub = self.create_subscription(
             DetectionArray, '/detection/mot', self.detection_callback, 10)
         self.input_sub = self.create_subscription(
-            Input, '/input', self.input_callback, 10)
+            TurretState, '/turret/state', self.state_callback, 10)
         self.image_sub = self.create_subscription(
             Image, '/camera/image_raw', self.image_callback, 10)
 
         self.track_pub = self.create_publisher(
             DetectionArray, '/detection/overlay', 10)
+        self.event_pub = self.create_publisher(
+            TurretEvent, '/turret/event', 10
+        )
 
         self.get_logger().info("SOT (DaSiamRPN) Node Initialized")
 
-    def input_callback(self, msg):
+    def state_callback(self, msg):
         self.mode = msg.mode
         self.active_target_id = msg.target_id
         self.tracker_state = None
         self.target_class = None
         self.pending_bbox = None
-        self.get_logger().info(f"Selected object ID: {msg.target_id}")
 
     def detection_callback(self, msg):
-        if self.mode != 'TRACK' or self.active_target_id is None or self.tracker_state is not None:
+        if self.mode != 'TRACK' or self.active_target_id == -1 or self.tracker_state is not None:
             return
 
         for det in msg.detections:
@@ -66,7 +72,7 @@ class SOTNode(Node):
                 break
 
     def image_callback(self, msg):
-        if self.active_target_id is None or self.mode != 'TRACK':
+        if self.active_target_id == -1 or self.mode != 'TRACK':
             return
 
         frame = self.bridge.imgmsg_to_cv2(msg, desired_encoding='bgr8')
@@ -78,12 +84,26 @@ class SOTNode(Node):
             target_sz = np.array([w, h])
             self.tracker_state = SiamRPN_init(frame, target_pos, target_sz, self.net)
             self.pending_bbox = None
+            self.last_seen = time.time()
+            self.publish_event("tracking_object")
+
             self.get_logger().info(f"Tracker initialized for ID {self.active_target_id}")
             return
 
         if self.tracker_state is not None:
             # Track object in new frame
             self.tracker_state = SiamRPN_track(self.tracker_state, frame)
+            confidence = self.tracker_state.get('score', 0)
+            if confidence < self.CONFIDENCE_THRESHOLD:
+                if time.time() - self.last_seen > self.MAX_LOST_TIME:
+                    self.publish_event("lost_object")
+                    self.tracker_state = None
+                    self.target_class = None
+                    self.pending_bbox = None
+                    self.active_target_id = -1
+                return
+            
+            self.last_seen = time.time()
             bbox = cxy_wh_2_rect(self.tracker_state['target_pos'], self.tracker_state['target_sz'])
             x, y, w, h = bbox.astype(float) 
 
@@ -98,7 +118,18 @@ class SOTNode(Node):
             arr_msg = DetectionArray()
             arr_msg.detections.append(det_msg)
             self.track_pub.publish(arr_msg)
-            # self.get_logger().info(str(arr_msg))
+
+    def publish_event(self, event_type):
+        msg = TurretEvent()
+        msg.event = event_type
+        msg.target_id = -1
+        msg.prompt = ""
+        msg.clear_prompt = False
+        msg.clear_target_id = event_type == "lost_object" 
+        msg.message = self.target_class
+        msg.stamp = self.get_clock().now().to_msg()
+        self.event_pub.publish(msg)
+        self.get_logger().info(f"[EVENT] {str(msg)}")
 
 def main(args=None):
     rclpy.init(args=args)

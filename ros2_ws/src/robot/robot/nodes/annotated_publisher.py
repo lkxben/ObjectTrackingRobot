@@ -1,9 +1,8 @@
 import rclpy
 from rclpy.node import Node
 from sensor_msgs.msg import Image, CompressedImage
-from std_msgs.msg import Float32MultiArray, Int32
 from cv_bridge import CvBridge
-from robot_msgs.msg import DetectionArray, Input
+from robot_msgs.msg import DetectionArray, TurretState
 import cv2
 import time
 
@@ -30,10 +29,10 @@ class AnnotatedPublisher(Node):
             10
         )
 
-        self.input_sub = self.create_subscription(
-            Int32,
-            '/input',
-            self.input_callback,
+        self.state_sub = self.create_subscription(
+            TurretState,
+            '/turret/state',
+            self.state_callback,
             10
         )
 
@@ -61,7 +60,7 @@ class AnnotatedPublisher(Node):
             else:
                 self.latest_detections = []
 
-    def input_callback(self, msg):
+    def state_callback(self, msg):
         self.mode = msg.mode
         self.target_id = msg.target_id
 

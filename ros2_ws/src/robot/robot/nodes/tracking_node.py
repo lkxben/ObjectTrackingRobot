@@ -4,7 +4,7 @@ from std_msgs.msg import Float32MultiArray, Int32
 import socket
 import os
 from dotenv import load_dotenv
-from robot_msgs.msg import DetectionArray, Input
+from robot_msgs.msg import DetectionArray, TurretState
 import time
 
 load_dotenv()
@@ -28,17 +28,17 @@ class TrackingNode(Node):
         super().__init__('tracking_node')
         self.det_sub = self.create_subscription(
             DetectionArray,
-            '/detection/sot',
+            '/detection/overlay',
             self.detection_callback,
             10
         )
-        self.input_sub = self.create_subscription(
-            Input,
-            '/input',
-            self.input_callback,
+        self.state_sub = self.create_subscription(
+            TurretState,
+            '/turret/state',
+            self.state_callback,
             10
         )
-        self.trackId = -1
+        self.target_id = -1
         self.resolution = (320, 240)
         self.create_subscription(Float32MultiArray, '/camera/info', self.info_callback, 10)
         self.max_angle = 90.0
@@ -51,9 +51,9 @@ class TrackingNode(Node):
         if len(msg.data) >= 2:
             self.resolution = (msg.data[0], msg.data[1])
 
-    def input_callback(self, msg):
-        self.get_logger().info(f"Received track ID: {msg.target_id}")
-        self.trackId = msg.target_id
+    def state_callback(self, msg):
+        if msg.target_id != -1:
+            self.target_id = msg.target_id
         
     def detection_callback(self, msg):
         now = time.time()
@@ -62,12 +62,12 @@ class TrackingNode(Node):
         
         tracked_det = None
         for det in msg.detections:
-            if det.track_id == self.trackId:
+            if det.track_id == self.target_id:
                 tracked_det = det
                 break
         
         if not tracked_det:
-            self.get_logger().debug(f"No detection matches id {self.trackId}")
+            self.get_logger().debug(f"No detection matches id {self.target_id}")
             return
         
         mid_x = (tracked_det.x1 + tracked_det.x2) / 2
@@ -91,7 +91,7 @@ class TrackingNode(Node):
         try:
             sock.sendto(udpmsg.encode(), (ESP32_IP, ESP32_PORT))
             self.last_sent_time = now
-            self.get_logger().info(f"Sent UDP message: {udpmsg} to {ESP32_IP}:{ESP32_PORT}")
+            # self.get_logger().info(f"Sent UDP message: {udpmsg} to {ESP32_IP}:{ESP32_PORT}")
         except Exception as e:
             self.get_logger().error(f"Failed to send UDP message: {e}")
 
