@@ -99,7 +99,7 @@ function App() {
 
   const handleTargetIdSubmit = () => {
     if (!targetId.trim()) return;
-    sendInput({ target_id: targetId });
+    sendInput({ targetId: targetId });
     setTrackingStatus(`Tracking "${prompt}" (ID ${targetId})`);
   };
 

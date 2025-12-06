@@ -68,6 +68,7 @@ def start_tunnel():
                 try:
                     msg = backend_to_local_queue.get(timeout=1)
                     ws_local.send(msg)
+                    print(msg)
                     backend_to_local_queue.task_done()
                 except queue.Empty:
                     continue
