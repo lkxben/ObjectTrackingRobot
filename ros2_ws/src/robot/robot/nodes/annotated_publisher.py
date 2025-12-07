@@ -37,12 +37,12 @@ class AnnotatedPublisher(Node):
         )
 
         self.target_id = -1
-        self.mode = None
+        self.status = None
         self.pub = self.create_publisher(CompressedImage, '/camera/annotated/compressed', 10)
         self.get_logger().info('Annotated Publisher Setup - Complete')
 
     def detection_callback(self, msg):
-        if self.mode == 'TRACK' and self.target_id != -1:
+        if self.status == 'TRACKING':
             if len(msg.detections) > 0:
                 for det in msg.detections:
                     if det.track_id == self.target_id:
@@ -61,7 +61,7 @@ class AnnotatedPublisher(Node):
                 self.latest_detections = []
 
     def state_callback(self, msg):
-        self.mode = msg.mode
+        self.status = msg.status
         self.target_id = msg.target_id
 
     def image_callback(self, img_msg):

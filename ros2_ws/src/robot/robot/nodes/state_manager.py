@@ -9,6 +9,7 @@ class StateManager(Node):
 
         self.state = TurretState()
         self.state.mode = "IDLE"
+        self.state.status = "IDLE"
         self.state.prompt = ""
         self.state.target_id = -1
         self.state.stamp = self.get_clock().now().to_msg()
@@ -30,9 +31,14 @@ class StateManager(Node):
         prev_prompt = self.state.prompt
         prev_target_id = self.state.target_id
         prev_mode = self.state.mode
+        prev_status = self.state.status
 
         if msg.mode:
             self.state.mode = msg.mode
+            if msg.mode in ['IDLE', 'MANUAL']:
+                self.state.status = 'IDLE'
+            elif msg.mode in ['TRACK', 'AUTO_LOG', 'AUTO_TRACK']:
+                self.state.status = 'SEARCHING'
 
         if msg.clear_prompt:
             self.state.prompt = ""
@@ -41,20 +47,23 @@ class StateManager(Node):
 
         if msg.clear_target_id:
             self.state.target_id = -1
+            self.state.status = 'SEARCHING'
         elif msg.target_id != -1:
             self.state.target_id = msg.target_id
+            self.state.status = 'TRACKING'
 
         self.state.stamp = self.get_clock().now().to_msg()
         if (self.state.prompt != prev_prompt or
             self.state.target_id != prev_target_id or 
-            self.state.mode != prev_mode):
+            self.state.mode != prev_mode or
+            self.state.status != prev_status):
             self.get_logger().info("Input publishing state: " + str(self.state))
             self.state_pub.publish(self.state)
         
     def event_callback(self, msg: TurretEvent):
         prev_prompt = self.state.prompt
         prev_target_id = self.state.target_id
-        prev_mode = self.state.mode
+        prev_status = self.state.status
 
         if msg.clear_prompt:
             self.state.prompt = ""
@@ -63,21 +72,20 @@ class StateManager(Node):
         
         if msg.clear_target_id:
             self.state.target_id = -1
+            self.state.status = "SEARCHING"
         elif msg.target_id != -1:
             self.state.target_id = msg.target_id
+            self.state.status = "TRACKING"
 
-        if prev_mode == "AUTO" and msg.event == "object_detected" and msg.target_id != -1:
-            self.state.mode = "TRACK"
-
-        if prev_mode == "TRACK" and msg.event == "lost_object":
-            self.state.mode = "AUTO"
+        if prev_status == "TRACKING" and msg.event == "lost_object":
+            self.state.status = "SEARCHING"
             self.state.target_id = -1
 
         self.state.stamp = self.get_clock().now().to_msg()
 
         if (self.state.prompt != prev_prompt or
             self.state.target_id != prev_target_id or 
-            self.state.mode != prev_mode):
+            self.state.status != prev_status):
             self.get_logger().info("Event publishing state: " + str(self.state))
             self.state_pub.publish(self.state)
 

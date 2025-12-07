@@ -39,7 +39,7 @@ class TrackingNode(Node):
             10
         )
         self.target_id = -1
-        self.mode = None
+        self.status = None
         self.resolution = (320, 240)
         self.create_subscription(Float32MultiArray, '/camera/info', self.info_callback, 10)
         self.max_angle = 90.0
@@ -54,10 +54,10 @@ class TrackingNode(Node):
 
     def state_callback(self, msg):
         self.target_id = msg.target_id
-        self.mode = msg.mode
-        
+        self.status = msg.status
+
     def detection_callback(self, msg):
-        if self.mode != 'TRACK':
+        if self.status != "TRACKING":
             return
 
         now = time.time()

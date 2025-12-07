@@ -24,8 +24,8 @@ SWEEP_RESET_COUNT = 10
 class ScanningNode(Node):
     def __init__(self):
         super().__init__('scanning_node')
-        self.mode = 'IDLE'
-        self.active_target_id = -1
+        self.mode = None
+        self.status = None
         self.servo_angle = CENTER_ANGLE
         self.scan_dir = 1
         self.last_sent_time = time.time()
@@ -42,7 +42,7 @@ class ScanningNode(Node):
         self.create_timer(1.0 / UPDATE_FREQ, self.update_scan)
 
     def state_callback(self, msg: TurretState):
-        if self.mode != msg.mode and msg.mode == "AUTO":
+        if self.mode != msg.mode and msg.mode in ["AUTO_LOG", "AUTO_TRACK"]:
             try:
                 sock.sendto("RESET".encode(), (ESP32_IP, ESP32_PORT))
                 self.servo_angle = CENTER_ANGLE
@@ -52,13 +52,13 @@ class ScanningNode(Node):
             except Exception as e:
                 self.get_logger().error(f"Failed to send RESET on AUTO start: {e}")
         self.mode = msg.mode
-        self.active_target_id = msg.target_id
+        self.status = msg.status
 
     def detection_callback(self, msg: Detection):
         pass
 
     def update_scan(self):
-        if self.mode != 'AUTO' or self.active_target_id != -1:
+        if self.mode not in ['AUTO_LOG', 'AUTO_TRACK'] or self.status != 'SEARCHING':
             return
 
         now = time.time()

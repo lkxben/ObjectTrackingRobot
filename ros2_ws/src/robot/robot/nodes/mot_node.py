@@ -40,6 +40,7 @@ class MOTNode(Node):
         self.frame_id = 0
         self.prev_prompt = None
         self.mode = None
+        self.status = None
 
         self.STABLE_FRAMES = 10
         self.MIN_EVENT_INTERVAL = 1 
@@ -58,9 +59,11 @@ class MOTNode(Node):
 
     def state_callback(self, msg):
         self.mode = msg.mode
+        self.status = msg.status
         self.target_id = msg.target_id
         if self.prev_prompt != msg.prompt:
             self.prev_prompt = msg.prompt
+            self.prompt_list = [p.strip() for p in msg.prompt.split(",") if p.strip()]
             self.tracker = BYTETracker(self.args, frame_rate=30)
             self.frame_id = 0
             self.detected_classes.clear()
@@ -106,21 +109,22 @@ class MOTNode(Node):
                     break
             tracked_msg.detections.append(det)
 
-        if self.mode == 'AUTO' and tracked_msg.detections:
-            best_det = max(tracked_msg.detections, key=lambda d: d.confidence)
-            event_msg = TurretEvent()
-            event_msg.event = "object_detected"
-            event_msg.prompt = ""
-            event_msg.target_id = best_det.track_id
-            event_msg.clear_prompt = False
-            event_msg.clear_target_id = False
-            event_msg.stamp = self.get_clock().now().to_msg()
-            event_msg.message = best_det.class_name
-            self.event_pub.publish(event_msg)
+        if self.mode == 'AUTO_TRACK' and self.status == 'SEARCHING' and tracked_msg.detections:
+            matching_dets = [d for d in tracked_msg.detections if d.class_name in self.prompt_list]
+            if matching_dets:
+                best_det = max(matching_dets, key=lambda d: d.confidence)
+                event_msg = TurretEvent()
+                event_msg.event = "object_detected"
+                event_msg.prompt = ""
+                event_msg.target_id = best_det.track_id
+                event_msg.clear_prompt = False
+                event_msg.clear_target_id = False
+                event_msg.stamp = self.get_clock().now().to_msg()
+                event_msg.message = best_det.class_name
+                self.event_pub.publish(event_msg)
 
-            # update internal mode to TRACK
-            self.mode = 'TRACK'
-            self.target_id = best_det.track_id
+                self.status = 'TRACKING'
+                self.target_id = best_det.track_id
 
         now = time.time()
         for class_name in current_classes:
@@ -136,6 +140,7 @@ class MOTNode(Node):
                 event_msg.clear_target_id = False
                 event_msg.stamp = self.get_clock().now().to_msg()
                 event_msg.message = class_name
+                self.get_logger().info(f"[EVENT] {str(event_msg)}")
                 self.event_pub.publish(event_msg)
                 self.detected_classes.add(class_name)
                 self.last_event_time[class_name] = now
@@ -144,7 +149,7 @@ class MOTNode(Node):
             if class_name not in current_classes:
                 self.stable_counter[class_name] = 0
 
-        if self.mode == 'TRACK' and self.target_id != -1:
+        if self.status == 'TRACKING':
             self.mot_pub.publish(tracked_msg)
         else:
             self.overlay_pub.publish(tracked_msg)
