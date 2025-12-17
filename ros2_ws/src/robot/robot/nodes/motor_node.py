@@ -49,7 +49,10 @@ class MotorNode(Node):
         self.servo_angle = max(SERVO_MIN, min(SERVO_MAX, self.servo_angle))
         self.servo_pwm.ChangeDutyCycle(self.angle_to_duty(self.servo_angle))
         self.delta_cmd = 0.0
-        self.pos_pub.publish(self.servo_angle)
+
+        msg = Float32()
+        msg.data = self.servo_angle
+        self.pos_pub.publish(msg)
 
     def destroy_node(self):
         super().destroy_node()

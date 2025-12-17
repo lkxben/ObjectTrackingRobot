@@ -21,8 +21,6 @@ https://github.com/ultralytics/assets/releases/download/v0.0.0/mobileclip_blt.ts
 # Set up workspace
 WORKDIR /root/ObjectTrackingRobot/ros2_ws
 
-RUN chmod +x setup_ros.sh
-
 # Install ByteTrack
 RUN git clone https://github.com/ifzhang/ByteTrack.git /root/ByteTrack
 WORKDIR /root/ByteTrack
@@ -47,7 +45,8 @@ WORKDIR /root/DaSiamRPN
 RUN pip install gdown
 RUN gdown --id 1-vNVZxfbIplXHrqMHiJJYWXYWsOIvGsf -O /root/DaSiamRPN/code/SiamRPNBIG.model
 
-# # Source ROS 2 automatically when container starts
-# RUN echo "source /opt/ros/humble/setup.bash" >> ~/.bashrc
+# Source ROS 2 automatically when container starts
+RUN echo "source /opt/ros/humble/setup.bash" >> ~/.bashrc
+RUN echo "source /root/ros2_ws/install/setup.bash" >> ~/.bashrc
 
-CMD ["/bin/bash", "-c", "bash /ros2_ws/setup_ros.sh && bash"]
+CMD ["/bin/bash", "-c", "source setup_ros.sh && exec bash"]

@@ -3,9 +3,9 @@ services:
     build: .
     container_name: object_tracking_robot
     volumes:
-      - ./ros2_ws/src:/root/ros2_ws/src
-      - ./weights:/root/ros2_ws/weights
-      - ./.env:/root/ros2_ws/.env:ro
+      - ./ros2_ws:/root/ros2_ws
+    env_file:
+      - ./.env
     working_dir: /root/ros2_ws
     tty: true
     stdin_open: true

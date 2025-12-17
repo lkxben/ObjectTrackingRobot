@@ -81,8 +81,10 @@ class TrackingNode(Node):
         delta_angle_y = round(delta_angle_y, 3)
 
         delta_angle_x = delta_angle_x if abs(delta_angle_x) > DEADZONE else 0
+        msg = Float32()
+        msg.data = delta_angle_x
 
-        self.motor_pub.publish(delta_angle_x)
+        self.motor_pub.publish(msg)
 
 def main(args=None):
     rclpy.init(args=args)

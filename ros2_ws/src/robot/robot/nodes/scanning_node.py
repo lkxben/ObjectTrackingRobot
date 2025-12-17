@@ -64,9 +64,11 @@ class ScanningNode(Node):
 
         delta_x = round(delta_angle, 3)
         delta_y = 0.0
+        msg = Float32()
+        msg.data = delta_x
 
         udpmsg = f"{delta_x},{delta_y}"
-        self.motor_pub.publish(delta_x)
+        self.motor_pub.publish(msg)
 
 def main(args=None):
     rclpy.init(args=args)
