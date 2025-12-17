@@ -4,8 +4,8 @@ from robot_msgs.msg import TurretState, Detection, TurretEvent
 from std_msgs.msg import Float32
 import time
 
-UPDATE_FREQ = 20.0
-SERVO_SPEED = 5.0
+UPDATE_FREQ = 15.0
+SERVO_SPEED = 0.01
 SERVO_MIN = 0.0
 SERVO_MAX = 180.0
 CENTER_ANGLE = 90.0
@@ -65,7 +65,7 @@ class ScanningNode(Node):
         delta_x = round(delta_angle, 3)
         delta_y = 0.0
         msg = Float32()
-        msg.data = delta_x
+        msg.data = float(delta_x)
 
         udpmsg = f"{delta_x},{delta_y}"
         self.motor_pub.publish(msg)

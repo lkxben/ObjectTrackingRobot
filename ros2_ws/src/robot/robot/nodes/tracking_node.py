@@ -82,7 +82,7 @@ class TrackingNode(Node):
 
         delta_angle_x = delta_angle_x if abs(delta_angle_x) > DEADZONE else 0
         msg = Float32()
-        msg.data = delta_angle_x
+        msg.data = float(delta_angle_x)
 
         self.motor_pub.publish(msg)
 

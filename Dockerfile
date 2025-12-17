@@ -6,12 +6,17 @@ SHELL ["/bin/bash", "-c"]
 RUN apt-get update && apt-get install -y \
 python3-pip python3-opencv git vim curl python3-colcon-common-extensions python3-rosdep \
 ros-humble-cv-bridge ros-humble-rosbridge-server \
+python3-lgpio python3-pigpio python3-rpi.gpio \
+libraspberrypi0 \
+libraspberrypi-dev \
 && rm -rf /var/lib/apt/lists/*
 
 # Upgrade pip and install Python packages
 RUN python3 -m pip install --upgrade pip
 RUN python3 -m pip install setuptools==65.5.0 packaging==23.0 "numpy<1.24" wheel torch torchvision torchaudio ultralytics opencv-python \
 python-dotenv websocket-client
+
+RUN pip3 install gpiozero --break-system-packages
 
 # Download MobileCLIP asset for YOLOE promptable models using curl
 RUN mkdir -p /root/.cache/ultralytics/assets && \

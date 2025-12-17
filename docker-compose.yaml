@@ -9,9 +9,9 @@ services:
     working_dir: /root/ros2_ws
     tty: true
     stdin_open: true
-    # network_mode: host
+    network_mode: host
     ports:
       - "9090:9090"
     privileged: true
     devices:
-      - "/dev/gpiomem:/dev/gpiomem"
+      - "/dev/gpiomem4:/dev/gpiomem4"
