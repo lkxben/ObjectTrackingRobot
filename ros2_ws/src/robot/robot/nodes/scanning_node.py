@@ -1,17 +1,8 @@
 import rclpy
 from rclpy.node import Node
 from robot_msgs.msg import TurretState, Detection, TurretEvent
-import socket
-import os
+from std_msgs.msg import Float32
 import time
-from dotenv import load_dotenv
-
-load_dotenv()
-
-ESP32_IP = os.environ.get("ESP32_IP")
-ESP32_PORT = int(os.environ.get("ESP32_PORT"))
-
-sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
 UPDATE_FREQ = 20.0
 SERVO_SPEED = 5.0
@@ -38,19 +29,11 @@ class ScanningNode(Node):
             Detection, '/detection/overlay', self.detection_callback, 10
         )
         self.event_pub = self.create_publisher(TurretEvent, '/turret/event', 10)
+        self.motor_pub = self.create_publisher(Float32, '/motor/cmd', 10)
 
         self.create_timer(1.0 / UPDATE_FREQ, self.update_scan)
 
     def state_callback(self, msg: TurretState):
-        if self.mode != msg.mode and msg.mode in ["AUTO_LOG", "AUTO_TRACK"]:
-            try:
-                sock.sendto("RESET".encode(), (ESP32_IP, ESP32_PORT))
-                self.servo_angle = CENTER_ANGLE
-                self.scan_dir = 1
-                self.sweep_count = 0
-                self.get_logger().info("[SCANNING] AUTO mode started, servo reset to center")
-            except Exception as e:
-                self.get_logger().error(f"Failed to send RESET on AUTO start: {e}")
         self.mode = msg.mode
         self.status = msg.status
 
@@ -83,21 +66,7 @@ class ScanningNode(Node):
         delta_y = 0.0
 
         udpmsg = f"{delta_x},{delta_y}"
-        try:
-            sock.sendto(udpmsg.encode(), (ESP32_IP, ESP32_PORT))
-            self.last_sent_time = now
-            self.get_logger().info(f"[SCANNING] Sent UDP message: {udpmsg}")
-        except Exception as e:
-            self.get_logger().error(f"Failed to send UDP message: {e}")
-
-        if self.sweep_count >= SWEEP_RESET_COUNT and abs(self.servo_angle - CENTER_ANGLE) <= RESET_THRESHOLD:
-            try:
-                sock.sendto("RESET".encode(), (ESP32_IP, ESP32_PORT))
-                self.servo_angle = CENTER_ANGLE
-                self.sweep_count = 0
-                self.get_logger().info("[SCANNING] Servo reset to center (timed)")
-            except Exception as e:
-                self.get_logger().error(f"Failed to send RESET message: {e}")
+        self.motor_pub.publish(delta_x)
 
 def main(args=None):
     rclpy.init(args=args)

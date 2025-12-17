@@ -1,25 +1,15 @@
 import rclpy
 from rclpy.node import Node
-from std_msgs.msg import Float32MultiArray, Int32
-import socket
-import os
-from dotenv import load_dotenv
+from std_msgs.msg import Float32MultiArray, Float32
 from robot_msgs.msg import DetectionArray, TurretState
 import time
 
-load_dotenv()
-
-ESP32_IP = os.environ.get("ESP32_IP")
-ESP32_PORT = int(os.environ.get("ESP32_PORT"))
-
-sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 SERVO_CENTER = 90
 SERVO_MIN = 0
 SERVO_MAX = 180
 FOV_X = 60.0
 FOV_Y = 75.0
 MAX_STEP = 3.5
-# SMOOTHING = 0.3
 DEADZONE = 0.15
 FREQUENCY = 20.0
 
@@ -46,6 +36,7 @@ class TrackingNode(Node):
         self.last_sent_time = 0.0
         self.update_interval = 1.0 / FREQUENCY
 
+        self.motor_pub = self.create_publisher(Float32, 'motor/cmd', 10)
         self.get_logger().info('Tracking Node Setup - Complete')
 
     def info_callback(self, msg):
@@ -91,15 +82,8 @@ class TrackingNode(Node):
 
         delta_angle_x = delta_angle_x if abs(delta_angle_x) > DEADZONE else 0
 
-        udpmsg = f"{delta_angle_x},{delta_angle_y}"
-        try:
-            sock.sendto(udpmsg.encode(), (ESP32_IP, ESP32_PORT))
-            self.last_sent_time = now
-            self.get_logger().info(f"[TRACKING] Sent UDP message: {udpmsg}")
-        except Exception as e:
-            self.get_logger().error(f"Failed to send UDP message: {e}")
+        self.motor_pub.publish(delta_angle_x)
 
-            
 def main(args=None):
     rclpy.init(args=args)
     node = TrackingNode()

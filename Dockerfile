@@ -18,22 +18,10 @@ RUN mkdir -p /root/.cache/ultralytics/assets && \
 curl -L -o /root/.cache/ultralytics/assets/mobileclip_blt.ts \
 https://github.com/ultralytics/assets/releases/download/v0.0.0/mobileclip_blt.ts
 
-# # Install additional dependencies for building micro-ROS Agent
-# RUN apt-get update && apt-get install -y \
-# python3-setuptools \
-# ros-humble-fastcdr \
-# ros-humble-fastrtps \
-# ros-humble-fastrtps-cmake-module \
-# && rm -rf /var/lib/apt/lists/*
-
-# # Clone and build micro-ROS Agent
-# RUN git clone -b humble https://github.com/micro-ROS/micro-ROS-Agent.git /root/micro-ROS-Agent && \
-# git clone -b humble https://github.com/micro-ROS/micro_ros_msgs.git /root/micro-ROS-Agent/src/micro_ros_msgs
-# WORKDIR /root/micro-ROS-Agent
-# RUN source /opt/ros/humble/setup.bash && colcon build --symlink-install
-
 # Set up workspace
 WORKDIR /root/ObjectTrackingRobot/ros2_ws
+
+RUN chmod +x setup_ros.sh
 
 # Install ByteTrack
 RUN git clone https://github.com/ifzhang/ByteTrack.git /root/ByteTrack
@@ -59,8 +47,7 @@ WORKDIR /root/DaSiamRPN
 RUN pip install gdown
 RUN gdown --id 1-vNVZxfbIplXHrqMHiJJYWXYWsOIvGsf -O /root/DaSiamRPN/code/SiamRPNBIG.model
 
-# Source ROS 2 automatically when container starts
-RUN echo "source /opt/ros/humble/setup.bash" >> ~/.bashrc
-# RUN echo "source /root/micro-ROS-Agent/install/setup.bash" >> ~/.bashrc
+# # Source ROS 2 automatically when container starts
+# RUN echo "source /opt/ros/humble/setup.bash" >> ~/.bashrc
 
-CMD ["/bin/bash"]
+CMD ["/bin/bash", "-c", "bash /ros2_ws/setup_ros.sh && bash"]

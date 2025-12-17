@@ -12,3 +12,6 @@ services:
     # network_mode: host
     ports:
       - "9090:9090"
+    privileged: true
+    devices:
+      - "/dev/gpiomem:/dev/gpiomem"
