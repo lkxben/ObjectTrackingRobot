@@ -24,6 +24,8 @@ function App() {
   const cameraTopicRef = useRef(null);
   const inputTopicRef = useRef(null);
   const logTopicRef = useRef(null);
+  const manualTopicRef = useRef(null);
+  const manualIntervalRef = useRef(null);
   const consoleRef = useRef(null);
 
   const severityRank = {
@@ -67,6 +69,12 @@ function App() {
         const newLogs = [...prev, logEntry].slice(-100);
         return newLogs;
       });
+    });
+
+    manualTopicRef.current = new ROSLIB.Topic({
+      ros,
+      name: '/motor/manual',
+      messageType: 'std_msgs/Float32',
     });
     
     cameraTopicRef.current = new ROSLIB.Topic({ ros, name: '/camera/annotated/compressed', messageType: 'sensor_msgs/CompressedImage' });
@@ -140,7 +148,38 @@ function App() {
     setTrackingStatus(`Tracking "${prompt}" (ID ${targetId})`);
   };
 
+  const sendManual = (delta) => {
+    if (!manualTopicRef.current) return;
+
+    manualTopicRef.current.publish(
+      new ROSLIB.Message({ data: delta })
+    );
+  };
+
+  const startManual = (delta) => {
+    if (!manualTopicRef.current) return;
+
+    sendManual(delta);
+
+    manualIntervalRef.current = setInterval(() => {
+      sendManual(delta);
+    }, 50);
+  };
+
+  const stopManual = () => {
+    if (manualIntervalRef.current) {
+      clearInterval(manualIntervalRef.current);
+      manualIntervalRef.current = null;
+    }
+  };
+
   const streamActive = rosStatus === 'Online' && Date.now() - lastImageTimeRef.current < 5000;
+  useEffect(() => {
+    if (!streamActive) {
+      stopManual();
+    }
+  }, [streamActive]);
+
   const filteredLogs = eventLogs.filter(log => {
     return severityRank[log.level] >= severityRank[filterLevel];
   });
@@ -179,20 +218,27 @@ function App() {
             </select>
           </div>
 
-          {/* {mode === 'AUTO' && (
-            <div className="auto-controls">
+          {mode === 'MANUAL' && (
+            <div className="manual-controls">
               <button
-                onClick={() => {
-                  if (!prompt.trim()) return;
-                  sendInput({ mode: 'AUTO', prompt, clearPrompt: false, clearTarget: true });
-                  setTrackingStatus(`Auto tracking "${prompt}"`);
-                }}
-                disabled={!prompt.trim()}
+                disabled={!streamActive}
+                onMouseDown={() => startManual(-2)}
+                onMouseUp={stopManual}
+                onMouseLeave={stopManual}
               >
-                Start AUTO
+                ◀
+              </button>
+
+              <button
+                disabled={!streamActive}
+                onMouseDown={() => startManual(2)}
+                onMouseUp={stopManual}
+                onMouseLeave={stopManual}
+              >
+                ▶
               </button>
             </div>
-          )} */}
+          )}
 
           {mode === 'AUTO' && (
             <div className="auto-controls">

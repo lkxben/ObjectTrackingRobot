@@ -11,9 +11,6 @@ class ManualNode(Node):
         self.state_sub = self.create_subscription(
             TurretState, '/turret/state', self.state_callback, 10
         )
-        # self.pos_sub = self.create_subscription(
-        #     Float32, '/turret/position', self.position_callback, 10
-        # )
         self.man_sub = self.create_subscription(
             Float32, '/motor/manual', self.manual_callback, 10
         )
@@ -21,9 +18,6 @@ class ManualNode(Node):
 
     def state_callback(self, msg: TurretState):
         self.mode = msg.mode
-
-    # def position_callback(self, msg):
-    #     self.delta_angle = msg.data
 
     def manual_callback(self, msg: Float32):
         if self.mode != "MANUAL":
