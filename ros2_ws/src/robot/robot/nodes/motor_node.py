@@ -45,7 +45,7 @@ class MotorNode(Node):
         angle = max(SERVO_MIN, min(SERVO_MAX, angle))
         encoded = round(angle / 180.0 * 65535)
         try:
-            self.get_logger().info(str(angle))
+            # self.get_logger().info(str(angle))
             self.ser.write(struct.pack('>H', encoded))
         except Exception as e:
             self.get_logger().error(f"Failed to send angle: {e}")

@@ -9,7 +9,8 @@ LOCAL = "ws://localhost:9090"
 BACKEND = "wss://objecttrackingrobot.onrender.com/rosbridge?client=localrosbridge"
 
 BACKEND_TOPICS = [
-    {"topic": "/input", "type": "robot_msgs/Input" }
+    {"topic": "/input", "type": "robot_msgs/Input" },
+    {"topic": "/motor/manual", "type":"std_msgs/Float32" }
 ]
 
 LOCAL_TOPICS = [
