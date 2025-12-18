@@ -26,6 +26,7 @@ function App() {
   const logTopicRef = useRef(null);
   const manualTopicRef = useRef(null);
   const manualIntervalRef = useRef(null);
+  const manualKeyActiveRef = useRef(null);
   const consoleRef = useRef(null);
 
   const severityRank = {
@@ -34,6 +35,48 @@ function App() {
     warning: 3,
     error: 4,
   };
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (mode !== 'MANUAL') return;
+      if (!streamActive) return;
+      if (manualKeyActiveRef.current !== null) return;
+
+      if (['ArrowLeft', 'ArrowRight'].includes(e.key)) {
+        e.preventDefault();
+      }
+
+      if (e.key === 'a' || e.key === 'ArrowLeft') {
+        manualKeyActiveRef.current = -1;
+        startManual(-1);
+      }
+
+      if (e.key === 'd' || e.key === 'ArrowRight') {
+        manualKeyActiveRef.current = 1;
+        startManual(1);
+      }
+    };
+
+    const handleKeyUp = (e) => {
+      if (
+        e.key === 'a' ||
+        e.key === 'd' ||
+        e.key === 'ArrowLeft' ||
+        e.key === 'ArrowRight'
+      ) {
+        manualKeyActiveRef.current = null;
+        stopManual();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('keyup', handleKeyUp);
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('keyup', handleKeyUp);
+    };
+  }, [mode, streamActive]);
 
   // auto scroll log
   useEffect(() => {
@@ -222,7 +265,7 @@ function App() {
             <div className="manual-controls">
               <button
                 disabled={!streamActive}
-                onMouseDown={() => startManual(-2)}
+                onMouseDown={() => startManual(-1)}
                 onMouseUp={stopManual}
                 onMouseLeave={stopManual}
               >
@@ -231,7 +274,7 @@ function App() {
 
               <button
                 disabled={!streamActive}
-                onMouseDown={() => startManual(2)}
+                onMouseDown={() => startManual(1)}
                 onMouseUp={stopManual}
                 onMouseLeave={stopManual}
               >
