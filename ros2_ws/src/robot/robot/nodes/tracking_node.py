@@ -62,7 +62,6 @@ class TrackingNode(Node):
                 break
         
         if not tracked_det:
-            self.get_logger().debug(f"No detection matches id {self.target_id}")
             return
         
         mid_x = (tracked_det.x1 + tracked_det.x2) / 2

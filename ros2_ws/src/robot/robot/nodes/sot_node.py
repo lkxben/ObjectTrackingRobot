@@ -28,7 +28,7 @@ class SOTNode(Node):
         self.status = None
         self.last_seen = 0
         self.MAX_LOST_TIME = 2.0
-        self.CONFIDENCE_THRESHOLD = 0.25
+        self.CONFIDENCE_THRESHOLD = 0.15
 
         self.net = SiamRPNBIG()
         self.net.load_state_dict(torch.load('/root/DaSiamRPN/code/SiamRPNBIG.model', map_location=torch.device('cpu'), weights_only=False))
@@ -129,7 +129,6 @@ class SOTNode(Node):
         msg.message = self.target_class
         msg.stamp = self.get_clock().now().to_msg()
         self.event_pub.publish(msg)
-        self.get_logger().info(f"[EVENT] {str(msg)}")
 
 def main(args=None):
     rclpy.init(args=args)
