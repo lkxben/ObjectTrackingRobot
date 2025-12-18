@@ -245,13 +245,6 @@ function App() {
             <span>FPS: {fps}</span>
           </div>
 
-          <div className="stream-controls">
-            <button className="start-stream">Start Stream</button>
-            <button className="stop-stream">Stop Stream</button>
-          </div>
-        </section>
-
-        <section className="input-card">
           <div className="mode-card">
             <select value={mode} onChange={handleModeChange}>
               <option value="IDLE">IDLE</option>
