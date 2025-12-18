@@ -11,7 +11,7 @@ FOV_X = 60.0
 FOV_Y = 75.0
 MAX_STEP = 3.5
 DEADZONE = 0.15
-FREQUENCY = 20.0
+FREQUENCY = 50.0 #20.0
 
 class TrackingNode(Node):
     def __init__(self):

@@ -4,8 +4,8 @@ from robot_msgs.msg import TurretState, Detection, TurretEvent
 from std_msgs.msg import Float32
 import time
 
-UPDATE_FREQ = 15.0
-SERVO_SPEED = 0.01
+UPDATE_FREQ = 50.0
+SERVO_SPEED = 0.003
 SERVO_MIN = 0.0
 SERVO_MAX = 180.0
 CENTER_ANGLE = 90.0

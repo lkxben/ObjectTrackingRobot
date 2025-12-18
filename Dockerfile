@@ -14,7 +14,7 @@ libraspberrypi-dev \
 # Upgrade pip and install Python packages
 RUN python3 -m pip install --upgrade pip
 RUN python3 -m pip install setuptools==65.5.0 packaging==23.0 "numpy<1.24" wheel torch torchvision torchaudio ultralytics opencv-python \
-python-dotenv websocket-client
+python-dotenv websocket-client pyserial
 
 RUN pip3 install gpiozero --break-system-packages
 
