@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
 import ROSLIB from 'roslib';
 import './App.css';
 
@@ -35,48 +35,6 @@ function App() {
     warning: 3,
     error: 4,
   };
-
-  useEffect(() => {
-    const handleKeyDown = (e) => {
-      if (mode !== 'MANUAL') return;
-      if (!streamActive) return;
-      if (manualKeyActiveRef.current !== null) return;
-
-      if (['ArrowLeft', 'ArrowRight'].includes(e.key)) {
-        e.preventDefault();
-      }
-
-      if (e.key === 'a' || e.key === 'ArrowLeft') {
-        manualKeyActiveRef.current = -1;
-        startManual(-1);
-      }
-
-      if (e.key === 'd' || e.key === 'ArrowRight') {
-        manualKeyActiveRef.current = 1;
-        startManual(1);
-      }
-    };
-
-    const handleKeyUp = (e) => {
-      if (
-        e.key === 'a' ||
-        e.key === 'd' ||
-        e.key === 'ArrowLeft' ||
-        e.key === 'ArrowRight'
-      ) {
-        manualKeyActiveRef.current = null;
-        stopManual();
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    window.addEventListener('keyup', handleKeyUp);
-
-    return () => {
-      window.removeEventListener('keydown', handleKeyDown);
-      window.removeEventListener('keyup', handleKeyUp);
-    };
-  }, [mode, streamActive]);
 
   // auto scroll log
   useEffect(() => {
@@ -199,15 +157,11 @@ function App() {
     );
   };
 
-  const startManual = (delta) => {
+  const startManual = useCallback((delta) => {
     if (!manualTopicRef.current) return;
-
     sendManual(delta);
-
-    manualIntervalRef.current = setInterval(() => {
-      sendManual(delta);
-    }, 50);
-  };
+    manualIntervalRef.current = setInterval(() => sendManual(delta), 50);
+  }, []);
 
   const stopManual = () => {
     if (manualIntervalRef.current) {
@@ -226,6 +180,48 @@ function App() {
   const filteredLogs = eventLogs.filter(log => {
     return severityRank[log.level] >= severityRank[filterLevel];
   });
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (mode !== 'MANUAL') return;
+      if (!streamActive) return;
+      if (manualKeyActiveRef.current !== null) return;
+
+      if (['ArrowLeft', 'ArrowRight'].includes(e.key)) {
+        e.preventDefault();
+      }
+
+      if (e.key === 'a' || e.key === 'ArrowLeft') {
+        manualKeyActiveRef.current = -1;
+        startManual(-1);
+      }
+
+      if (e.key === 'd' || e.key === 'ArrowRight') {
+        manualKeyActiveRef.current = 1;
+        startManual(1);
+      }
+    };
+
+    const handleKeyUp = (e) => {
+      if (
+        e.key === 'a' ||
+        e.key === 'd' ||
+        e.key === 'ArrowLeft' ||
+        e.key === 'ArrowRight'
+      ) {
+        manualKeyActiveRef.current = null;
+        stopManual();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('keyup', handleKeyUp);
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('keyup', handleKeyUp);
+    };
+  }, [mode, streamActive, startManual]);
 
   return (
     <div className="dashboard-container">

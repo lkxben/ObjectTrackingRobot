@@ -121,7 +121,6 @@ body, html, #root {
   justify-content: center;
   width: 100%;
   max-width: 300px; /* limit width */
-  margin-bottom: 10px;
 }
 
 .mode-card select {
