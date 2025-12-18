@@ -1,6 +1,5 @@
 import rclpy
 from rclpy.node import Node
-from robot_msgs.msg import TurretEvent
 from std_msgs.msg import Float32
 import serial
 import time
@@ -33,7 +32,6 @@ class MotorNode(Node):
         self.motor_sub = self.create_subscription(
             Float32, '/motor/cmd', self.motor_callback, 10
         )
-        self.event_pub = self.create_publisher(TurretEvent, '/turret/event', 10)
         self.pos_pub = self.create_publisher(Float32, '/turret/position', 10)
         self.timer = self.create_timer(1.0 / UPDATE_FREQ, self.update_servo)
         self.get_logger().info(f'Motor node initialized at {self.servo_angle}°')
