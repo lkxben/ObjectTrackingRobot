@@ -4,6 +4,7 @@ from robot_msgs.msg import TurretEvent
 from std_msgs.msg import Float32
 import serial
 import time
+import struct
 
 SERVO_MIN = 0.0
 SERVO_MAX = 180.0
@@ -12,7 +13,7 @@ UPDATE_FREQ = 50.0
 DEADBAND = 0.05
 
 USB_PORT = '/dev/ttyACM0'
-BAUDRATE = 115200
+BAUDRATE = 460800
 
 class MotorNode(Node):
     def __init__(self):
@@ -44,8 +45,10 @@ class MotorNode(Node):
         if self.ser is None:
             return
         angle = max(SERVO_MIN, min(SERVO_MAX, angle))
+        encoded = round(angle / 180.0 * 65535)
         try:
-            self.ser.write(f"{int(angle)}\n".encode('utf-8'))
+            self.get_logger().info(str(angle))
+            self.ser.write(struct.pack('>H', encoded))
         except Exception as e:
             self.get_logger().error(f"Failed to send angle: {e}")
 
@@ -54,15 +57,14 @@ class MotorNode(Node):
             self.servo_angle += self.delta_cmd
             self.servo_angle = max(SERVO_MIN, min(SERVO_MAX, self.servo_angle))
             self.delta_cmd = 0.0
-            self.send_angle(self.servo_angle)
-        else:
-            self.send_angle(self.servo_angle)
+        self.send_angle(self.servo_angle)
 
         msg = Float32()
         msg.data = self.servo_angle
         self.pos_pub.publish(msg)
 
     def destroy_node(self):
+        self.send_angle(self.SERVO_CENTER)
         if self.ser:
             self.ser.close()
         super().destroy_node()
