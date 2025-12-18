@@ -18,6 +18,8 @@ setup(
             'stream_to_image_node = robot.nodes.stream_to_image_node:main',
             'annotated_publisher = robot.nodes.annotated_publisher:main',
             'tracking_node = robot.nodes.tracking_node:main',
+            'scanning_node = robot.nodes.scanning_node:main',
+            'motor_node = robot.nodes.motor_node:main',
             'prompt_cv_node = robot.nodes.prompt_cv_node:main',
             'mot_node = robot.nodes.mot_node:main',
             'sot_node = robot.nodes.sot_node:main',

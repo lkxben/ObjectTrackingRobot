@@ -25,7 +25,7 @@ class SOTNode(Node):
         self.pending_bbox = None
         self.tracker_state = None
         self.target_class = None
-        self.mode = None
+        self.status = None
         self.last_seen = 0
         self.MAX_LOST_TIME = 2.0
         self.CONFIDENCE_THRESHOLD = 0.25
@@ -50,14 +50,14 @@ class SOTNode(Node):
         self.get_logger().info("SOT (DaSiamRPN) Node Initialized")
 
     def state_callback(self, msg):
-        self.mode = msg.mode
+        self.status = msg.status
         self.active_target_id = msg.target_id
         self.tracker_state = None
         self.target_class = None
         self.pending_bbox = None
 
     def detection_callback(self, msg):
-        if self.mode != 'TRACK' or self.active_target_id == -1 or self.tracker_state is not None:
+        if self.status != 'TRACKING' or self.active_target_id == -1 or self.tracker_state is not None:
             return
 
         for det in msg.detections:
@@ -72,7 +72,7 @@ class SOTNode(Node):
                 break
 
     def image_callback(self, msg):
-        if self.active_target_id == -1 or self.mode != 'TRACK':
+        if self.active_target_id == -1 or self.status != 'TRACKING':
             return
 
         frame = self.bridge.imgmsg_to_cv2(msg, desired_encoding='bgr8')

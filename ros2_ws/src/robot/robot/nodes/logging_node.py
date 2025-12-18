@@ -23,6 +23,11 @@ class LoggingNode(Node):
 
     def state_callback(self, msg: TurretState):
         self.state = msg
+        debug_msg = TurretLog()
+        debug_msg.level = "debug"
+        debug_msg.message = f"[MODE]: {self.state.mode} [STATUS]: {self.state.status}"
+        
+        self.log_pub.publish(debug_msg)
 
     def event_callback(self, msg: TurretEvent):
         log_msg = TurretLog()

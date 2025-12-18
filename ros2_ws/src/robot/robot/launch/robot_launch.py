@@ -20,6 +20,16 @@ def generate_launch_description():
         ),
         Node(
             package='robot',
+            executable='scanning_node',
+            name='scanning_node'
+        ),
+        Node(
+            package='robot',
+            executable='motor_node',
+            name='motor_node'
+        ),
+        Node(
+            package='robot',
             executable='annotated_publisher',
             name='annotated_publisher'
         ),

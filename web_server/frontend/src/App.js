@@ -12,7 +12,8 @@ function App() {
   const [prompt, setPrompt] = useState('');
   const [targetId, setTargetId] = useState('');
   const [eventLogs, setEventLogs] = useState([]);
-  const [filterLevel, setFilterLevel] = useState('all');
+  const [filterLevel, setFilterLevel] = useState('debug');
+  const [autoTrackEnabled, setAutoTrackEnabled] = useState(false);
 
   const imgRef = useRef(null);
   const lastImageTimeRef = useRef(Date.now());
@@ -116,8 +117,9 @@ function App() {
     setTargetId('');
     setTrackingStatus('');
     setEventLogs([]);
-
-    sendInput({ mode: newMode, clearPrompt: true, clearTarget: true });
+    if (newMode !== 'AUTO') {
+      sendInput({ mode: newMode, clearPrompt: true, clearTarget: true });
+    }
   };
 
   const handlePromptSubmit = () => {
@@ -176,6 +178,53 @@ function App() {
               <option value="AUTO">AUTO</option>
             </select>
           </div>
+
+          {/* {mode === 'AUTO' && (
+            <div className="auto-controls">
+              <button
+                onClick={() => {
+                  if (!prompt.trim()) return;
+                  sendInput({ mode: 'AUTO', prompt, clearPrompt: false, clearTarget: true });
+                  setTrackingStatus(`Auto tracking "${prompt}"`);
+                }}
+                disabled={!prompt.trim()}
+              >
+                Start AUTO
+              </button>
+            </div>
+          )} */}
+
+          {mode === 'AUTO' && (
+            <div className="auto-controls">
+              <div className="segmented-control">
+                <button
+                  className={!autoTrackEnabled ? 'active' : ''}
+                  onClick={() => setAutoTrackEnabled(false)}
+                >
+                  Log Only
+                </button>
+                <button
+                  className={autoTrackEnabled ? 'active' : ''}
+                  onClick={() => setAutoTrackEnabled(true)}
+                >
+                  Auto Track
+                </button>
+
+                <span className={`indicator ${autoTrackEnabled ? 'right' : 'left'}`} />
+              </div>
+
+              <button class="action-btn" id="start-btn"
+                onClick={() => {
+                  const modeToSend = autoTrackEnabled ? 'AUTO_TRACK' : 'AUTO_LOG';
+                  sendInput({ mode: modeToSend, prompt, clearPrompt: false, clearTarget: true });
+                  setTrackingStatus(`${autoTrackEnabled ? "Tracking" : "Logging"} "${prompt}"`);
+                }}
+                disabled={!prompt.trim()}
+              >
+                Start
+              </button>
+            </div>
+          )}
 
           {(mode === 'IDLE' || mode === 'TRACK' || mode === 'AUTO') && (
             <div className="prompt-inputs">
