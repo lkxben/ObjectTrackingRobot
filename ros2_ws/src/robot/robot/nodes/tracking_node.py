@@ -37,7 +37,7 @@ class TrackingNode(Node):
         self.update_interval = 1.0 / FREQUENCY
 
         self.motor_pub = self.create_publisher(Float32, 'motor/cmd', 10)
-        self.get_logger().info('Tracking Node Setup - Complete')
+        self.get_logger().info('Tracking Node Started')
 
     def info_callback(self, msg):
         if len(msg.data) >= 2:

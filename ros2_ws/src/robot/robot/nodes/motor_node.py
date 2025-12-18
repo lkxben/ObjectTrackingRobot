@@ -34,7 +34,7 @@ class MotorNode(Node):
         )
         self.pos_pub = self.create_publisher(Float32, '/turret/position', 10)
         self.timer = self.create_timer(1.0 / UPDATE_FREQ, self.update_servo)
-        self.get_logger().info(f'Motor node initialized at {self.servo_angle}°')
+        self.get_logger().info(f'Motor Node Started')
 
     def motor_callback(self, msg):
         self.delta_cmd += msg.data

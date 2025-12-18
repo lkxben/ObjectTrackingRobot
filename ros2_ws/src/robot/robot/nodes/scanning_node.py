@@ -26,6 +26,7 @@ class ScanningNode(Node):
         self.motor_pub = self.create_publisher(Float32, '/motor/cmd', 10)
 
         self.create_timer(1.0 / UPDATE_FREQ, self.update_scan)
+        self.get_logger().info("Scanning Node Started")
 
     def state_callback(self, msg: TurretState):
         self.mode = msg.mode

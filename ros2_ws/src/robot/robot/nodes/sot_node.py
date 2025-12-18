@@ -47,7 +47,7 @@ class SOTNode(Node):
             TurretEvent, '/turret/event', 10
         )
 
-        self.get_logger().info("SOT (DaSiamRPN) Node Initialized")
+        self.get_logger().info("SOT Node Started")
 
     def state_callback(self, msg):
         self.status = msg.status

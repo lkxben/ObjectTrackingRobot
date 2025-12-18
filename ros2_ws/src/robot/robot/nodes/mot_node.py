@@ -51,7 +51,7 @@ class MOTNode(Node):
         self.create_subscription(Float32MultiArray, '/camera/info', self.info_callback, 10)
         self.resolution = (320.0, 240.0)
 
-        self.get_logger().info('MOT Setup - Complete')
+        self.get_logger().info('MOT Started')
 
     def info_callback(self, msg):
         if len(msg.data) >= 2:

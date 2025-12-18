@@ -122,19 +122,17 @@ function App() {
   useEffect(() => {
     if (!rosRef.current) return;
 
-    heartbeatTopicRef.current = new ROSLIB.Topic({
+    const heartbeatTopic = new ROSLIB.Topic({
       ros: rosRef.current,
       name: '/viewer/heartbeat',
       messageType: 'std_msgs/Empty'
     });
 
-    const heartbeatInterval = setInterval(() => {
-      if (heartbeatTopicRef.current) {
-        heartbeatTopicRef.current.publish(new ROSLIB.Message({}));
-      }
-    }, 2000);
+    const interval = setInterval(() => {
+      heartbeatTopic.publish(new ROSLIB.Message({}));
+    }, 10000);
 
-    return () => clearInterval(heartbeatInterval);
+    return () => clearInterval(interval);
   }, []);
 
   const handleModeChange = (e) => {

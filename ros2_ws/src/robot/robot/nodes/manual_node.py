@@ -15,6 +15,7 @@ class ManualNode(Node):
             Float32, '/motor/manual', self.manual_callback, 10
         )
         self.motor_pub = self.create_publisher(Float32, '/motor/cmd', 10)
+        self.get_logger().info("Manual Node Started")
 
     def state_callback(self, msg: TurretState):
         self.mode = msg.mode
