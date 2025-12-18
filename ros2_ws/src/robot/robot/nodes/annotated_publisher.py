@@ -81,7 +81,7 @@ class AnnotatedPublisher(Node):
         try:
             now = time.time()
 
-            if now - self.last_hb_time > self.det_timeout:
+            if now - self.last_hb_time > self.hb_timeout:
                 return
 
             if now - self.last_det_time > self.det_timeout:

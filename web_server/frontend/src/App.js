@@ -130,7 +130,7 @@ function App() {
 
     const interval = setInterval(() => {
       heartbeatTopic.publish(new ROSLIB.Message({}));
-    }, 10000);
+    }, 1000);
 
     return () => clearInterval(interval);
   }, []);
