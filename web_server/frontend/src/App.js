@@ -27,6 +27,7 @@ function App() {
   const manualTopicRef = useRef(null);
   const manualIntervalRef = useRef(null);
   const manualKeyActiveRef = useRef(null);
+  const heartbeatTopicRef = useRef(null);
   const consoleRef = useRef(null);
 
   const severityRank = {
@@ -117,6 +118,24 @@ function App() {
 
     inputTopicRef.current.publish(msg);
   };
+
+  useEffect(() => {
+    if (!rosRef.current) return;
+
+    heartbeatTopicRef.current = new ROSLIB.Topic({
+      ros: rosRef.current,
+      name: '/viewer/heartbeat',
+      messageType: 'std_msgs/Empty'
+    });
+
+    const heartbeatInterval = setInterval(() => {
+      if (heartbeatTopicRef.current) {
+        heartbeatTopicRef.current.publish(new ROSLIB.Message({}));
+      }
+    }, 2000);
+
+    return () => clearInterval(heartbeatInterval);
+  }, []);
 
   const handleModeChange = (e) => {
     const newMode = e.target.value;

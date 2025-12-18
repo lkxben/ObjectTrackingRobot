@@ -36,10 +36,20 @@ class AnnotatedPublisher(Node):
             10
         )
 
+        self.hb_sub = self.create_subscription(
+            Empty,
+            '/viewer/heartbeat',
+            self.hb_callback,
+            10
+        )
+
         self.target_id = -1
         self.status = None
         self.pub = self.create_publisher(CompressedImage, '/camera/annotated/compressed', 10)
         self.get_logger().info('Annotated Publisher Setup - Complete')
+
+    def hb_callback(self, msg):
+        self.last_hb_time = time.time()
 
     def detection_callback(self, msg):
         if self.status == 'TRACKING':
@@ -67,6 +77,9 @@ class AnnotatedPublisher(Node):
     def image_callback(self, img_msg):
         try:
             now = time.time()
+
+            if now - self.last_hb_time > self.det_timeout:
+                return
 
             if now - self.last_det_time > self.det_timeout:
                 self.latest_detections = []
