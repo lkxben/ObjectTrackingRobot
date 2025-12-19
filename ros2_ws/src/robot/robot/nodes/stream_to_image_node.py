@@ -27,7 +27,7 @@ class StreamToImageNode(Node):
         self.height = int(self.cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
         self.timer = self.create_timer(1/30.0, self.publish_frame)
         self.info_timer = self.create_timer(1.0, self.publish_info)
-        self.get_logger().info('Stream to Image Setup - Complete')
+        self.get_logger().info('Stream to Image Node Started')
 
     def publish_frame(self):
         ret, frame = self.cap.read()

@@ -8,6 +8,8 @@ from robot_msgs.msg import Detection, DetectionArray, TurretState, TurretEvent
 from collections import defaultdict
 import time
 
+N = 3
+
 class MOTNode(Node):
     def __init__(self):
         super().__init__('mot_node')
@@ -48,10 +50,13 @@ class MOTNode(Node):
         self.stable_counter = defaultdict(int)
         self.last_event_time = defaultdict(lambda: 0)
 
+        # for auto track
+        self.detection_counter = {}
+
         self.create_subscription(Float32MultiArray, '/camera/info', self.info_callback, 10)
         self.resolution = (320.0, 240.0)
 
-        self.get_logger().info('MOT Setup - Complete')
+        self.get_logger().info('MOT Started')
 
     def info_callback(self, msg):
         if len(msg.data) >= 2:
@@ -112,19 +117,27 @@ class MOTNode(Node):
         if self.mode == 'AUTO_TRACK' and self.status == 'SEARCHING' and tracked_msg.detections:
             matching_dets = [d for d in tracked_msg.detections if d.class_name in self.prompt_list]
             if matching_dets:
-                best_det = max(matching_dets, key=lambda d: d.confidence)
-                event_msg = TurretEvent()
-                event_msg.event = "object_detected"
-                event_msg.prompt = ""
-                event_msg.target_id = best_det.track_id
-                event_msg.clear_prompt = False
-                event_msg.clear_target_id = False
-                event_msg.stamp = self.get_clock().now().to_msg()
-                event_msg.message = best_det.class_name
-                self.event_pub.publish(event_msg)
+                for det in matching_dets:
+                    self.detection_counter[det.track_id] = self.detection_counter.get(det.track_id, 0) + 1
 
-                self.status = 'TRACKING'
-                self.target_id = best_det.track_id
+                candidates = [d for d in matching_dets if self.detection_counter.get(det.track_id, 0) >= N]
+                if candidates:
+                    best_det = max(matching_dets, key=lambda d: d.confidence)
+                    event_msg = TurretEvent()
+                    event_msg.event = "object_detected"
+                    event_msg.prompt = ""
+                    event_msg.target_id = best_det.track_id
+                    event_msg.clear_prompt = False
+                    event_msg.clear_target_id = False
+                    event_msg.stamp = self.get_clock().now().to_msg()
+                    event_msg.message = best_det.class_name
+                    self.event_pub.publish(event_msg)
+
+                    self.status = 'TRACKING'
+                    self.target_id = best_det.track_id
+                    self.detection_counter.clear()
+            else:
+                self.detection_counter.clear()
 
         now = time.time()
         for class_name in current_classes:
@@ -140,7 +153,6 @@ class MOTNode(Node):
                 event_msg.clear_target_id = False
                 event_msg.stamp = self.get_clock().now().to_msg()
                 event_msg.message = class_name
-                self.get_logger().info(f"[EVENT] {str(event_msg)}")
                 self.event_pub.publish(event_msg)
                 self.detected_classes.add(class_name)
                 self.last_event_time[class_name] = now

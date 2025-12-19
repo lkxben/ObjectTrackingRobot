@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
 import ROSLIB from 'roslib';
 import './App.css';
 
@@ -24,6 +24,10 @@ function App() {
   const cameraTopicRef = useRef(null);
   const inputTopicRef = useRef(null);
   const logTopicRef = useRef(null);
+  const manualTopicRef = useRef(null);
+  const manualIntervalRef = useRef(null);
+  const manualKeyActiveRef = useRef(null);
+  const heartbeatTopicRef = useRef(null);
   const consoleRef = useRef(null);
 
   const severityRank = {
@@ -68,6 +72,12 @@ function App() {
         return newLogs;
       });
     });
+
+    manualTopicRef.current = new ROSLIB.Topic({
+      ros,
+      name: '/motor/manual',
+      messageType: 'std_msgs/Float32',
+    });
     
     cameraTopicRef.current = new ROSLIB.Topic({ ros, name: '/camera/annotated/compressed', messageType: 'sensor_msgs/CompressedImage' });
     cameraTopicRef.current.subscribe((msg) => {
@@ -109,6 +119,22 @@ function App() {
     inputTopicRef.current.publish(msg);
   };
 
+  useEffect(() => {
+    if (!rosRef.current) return;
+
+    const heartbeatTopic = new ROSLIB.Topic({
+      ros: rosRef.current,
+      name: '/viewer/heartbeat',
+      messageType: 'std_msgs/Empty'
+    });
+
+    const interval = setInterval(() => {
+      heartbeatTopic.publish(new ROSLIB.Message({}));
+    }, 30000);
+
+    return () => clearInterval(interval);
+  }, []);
+
   const handleModeChange = (e) => {
     const newMode = e.target.value;
     setMode(newMode);
@@ -140,10 +166,79 @@ function App() {
     setTrackingStatus(`Tracking "${prompt}" (ID ${targetId})`);
   };
 
+  const sendManual = (delta) => {
+    if (!manualTopicRef.current) return;
+
+    manualTopicRef.current.publish(
+      new ROSLIB.Message({ data: delta })
+    );
+  };
+
+  const startManual = useCallback((delta) => {
+    if (!manualTopicRef.current) return;
+    sendManual(delta);
+    manualIntervalRef.current = setInterval(() => sendManual(delta), 50);
+  }, []);
+
+  const stopManual = () => {
+    if (manualIntervalRef.current) {
+      clearInterval(manualIntervalRef.current);
+      manualIntervalRef.current = null;
+    }
+  };
+
   const streamActive = rosStatus === 'Online' && Date.now() - lastImageTimeRef.current < 5000;
+  useEffect(() => {
+    if (!streamActive) {
+      stopManual();
+    }
+  }, [streamActive]);
+
   const filteredLogs = eventLogs.filter(log => {
     return severityRank[log.level] >= severityRank[filterLevel];
   });
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (mode !== 'MANUAL') return;
+      if (!streamActive) return;
+      if (manualKeyActiveRef.current !== null) return;
+
+      if (['ArrowLeft', 'ArrowRight'].includes(e.key)) {
+        e.preventDefault();
+      }
+
+      if (e.key === 'a' || e.key === 'ArrowLeft') {
+        manualKeyActiveRef.current = -1;
+        startManual(-1);
+      }
+
+      if (e.key === 'd' || e.key === 'ArrowRight') {
+        manualKeyActiveRef.current = 1;
+        startManual(1);
+      }
+    };
+
+    const handleKeyUp = (e) => {
+      if (
+        e.key === 'a' ||
+        e.key === 'd' ||
+        e.key === 'ArrowLeft' ||
+        e.key === 'ArrowRight'
+      ) {
+        manualKeyActiveRef.current = null;
+        stopManual();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('keyup', handleKeyUp);
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('keyup', handleKeyUp);
+    };
+  }, [mode, streamActive, startManual]);
 
   return (
     <div className="dashboard-container">
@@ -163,13 +258,6 @@ function App() {
             <span>FPS: {fps}</span>
           </div>
 
-          <div className="stream-controls">
-            <button className="start-stream">Start Stream</button>
-            <button className="stop-stream">Stop Stream</button>
-          </div>
-        </section>
-
-        <section className="input-card">
           <div className="mode-card">
             <select value={mode} onChange={handleModeChange}>
               <option value="IDLE">IDLE</option>
@@ -179,20 +267,27 @@ function App() {
             </select>
           </div>
 
-          {/* {mode === 'AUTO' && (
-            <div className="auto-controls">
+          {mode === 'MANUAL' && (
+            <div className="manual-controls">
               <button
-                onClick={() => {
-                  if (!prompt.trim()) return;
-                  sendInput({ mode: 'AUTO', prompt, clearPrompt: false, clearTarget: true });
-                  setTrackingStatus(`Auto tracking "${prompt}"`);
-                }}
-                disabled={!prompt.trim()}
+                disabled={!streamActive}
+                onMouseDown={() => startManual(-1)}
+                onMouseUp={stopManual}
+                onMouseLeave={stopManual}
               >
-                Start AUTO
+                ◀
+              </button>
+
+              <button
+                disabled={!streamActive}
+                onMouseDown={() => startManual(1)}
+                onMouseUp={stopManual}
+                onMouseLeave={stopManual}
+              >
+                ▶
               </button>
             </div>
-          )} */}
+          )}
 
           {mode === 'AUTO' && (
             <div className="auto-controls">

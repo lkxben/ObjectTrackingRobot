@@ -75,27 +75,6 @@ body, html, #root {
   color: #8b949e;
 }
 
-.stream-controls {
-  display: flex;
-  gap: 10px;
-  margin-top: 10px;
-}
-
-.stream-controls button {
-  padding: 8px 15px;
-  border-radius: 8px;
-  border: none;
-  font-weight: bold;
-  cursor: pointer;
-  background: #444c56; /* slate grey */
-  color: #c9d1d9;
-  transition: 0.2s;
-}
-
-.stream-controls button:hover {
-  background: #565f6c; /* slightly lighter slate grey */
-}
-
 .prompt-inputs, .track-inputs {
   display: flex;
   gap: 10px;
@@ -142,7 +121,6 @@ body, html, #root {
   justify-content: center;
   width: 100%;
   max-width: 300px; /* limit width */
-  margin-bottom: 10px;
 }
 
 .mode-card select {
@@ -335,4 +313,39 @@ body, html, #root {
 
 .action-btn:active:not(:disabled) {
   transform: scale(0.96);
+}
+
+.manual-controls {
+  display: flex;
+  justify-content: center;
+  gap: 24px;
+  margin-top: 16px;
+}
+
+.manual-controls button {
+  width: 64px;
+  height: 64px;
+  font-size: 28px;
+  border-radius: 50%;
+  border: none;
+  background: #2c2f36;
+  color: #ffffff;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+  transition: background 0.15s ease, transform 0.05s ease;
+}
+
+.manual-controls button:hover:not(:disabled) {
+  background: #3a3f48;
+}
+
+.manual-controls button:active:not(:disabled) {
+  transform: scale(0.94);
+  background: #1f6feb;
+}
+
+.manual-controls button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  box-shadow: none;
 }

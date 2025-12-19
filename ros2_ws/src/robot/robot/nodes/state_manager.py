@@ -57,7 +57,6 @@ class StateManager(Node):
             self.state.target_id != prev_target_id or 
             self.state.mode != prev_mode or
             self.state.status != prev_status):
-            self.get_logger().info("Input publishing state: " + str(self.state))
             self.state_pub.publish(self.state)
         
     def event_callback(self, msg: TurretEvent):
@@ -86,7 +85,6 @@ class StateManager(Node):
         if (self.state.prompt != prev_prompt or
             self.state.target_id != prev_target_id or 
             self.state.status != prev_status):
-            self.get_logger().info("Event publishing state: " + str(self.state))
             self.state_pub.publish(self.state)
 
 def main(args=None):

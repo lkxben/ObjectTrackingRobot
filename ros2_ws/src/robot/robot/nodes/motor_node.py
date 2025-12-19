@@ -1,6 +1,5 @@
 import rclpy
 from rclpy.node import Node
-from robot_msgs.msg import TurretEvent
 from std_msgs.msg import Float32
 import serial
 import time
@@ -33,10 +32,9 @@ class MotorNode(Node):
         self.motor_sub = self.create_subscription(
             Float32, '/motor/cmd', self.motor_callback, 10
         )
-        self.event_pub = self.create_publisher(TurretEvent, '/turret/event', 10)
         self.pos_pub = self.create_publisher(Float32, '/turret/position', 10)
         self.timer = self.create_timer(1.0 / UPDATE_FREQ, self.update_servo)
-        self.get_logger().info(f'Motor node initialized at {self.servo_angle}°')
+        self.get_logger().info(f'Motor Node Started')
 
     def motor_callback(self, msg):
         self.delta_cmd += msg.data
@@ -47,8 +45,7 @@ class MotorNode(Node):
         angle = max(SERVO_MIN, min(SERVO_MAX, angle))
         encoded = round(angle / 180.0 * 65535)
         try:
-            self.get_logger().info(str(angle))
-            self.ser.write(struct.pack('>H', encoded))
+            self.ser.write(b'\xFF' + struct.pack('>H', encoded))
         except Exception as e:
             self.get_logger().error(f"Failed to send angle: {e}")
 

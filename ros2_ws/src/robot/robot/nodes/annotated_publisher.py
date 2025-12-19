@@ -1,6 +1,7 @@
 import rclpy
 from rclpy.node import Node
 from sensor_msgs.msg import Image, CompressedImage
+from std_msgs.msg import Empty
 from cv_bridge import CvBridge
 from robot_msgs.msg import DetectionArray, TurretState
 import cv2
@@ -14,7 +15,9 @@ class AnnotatedPublisher(Node):
         self.latest_detections = []
         self.last_det_time = 0.0
         self.det_timeout = 0.5
-
+        self.last_hb_time = 0.0
+        self.hb_timeout = 20.0
+        
         self.image_sub = self.create_subscription(
             Image,
             '/camera/image_raw',
@@ -36,10 +39,20 @@ class AnnotatedPublisher(Node):
             10
         )
 
+        self.hb_sub = self.create_subscription(
+            Empty,
+            '/viewer/heartbeat',
+            self.hb_callback,
+            10
+        )
+
         self.target_id = -1
         self.status = None
         self.pub = self.create_publisher(CompressedImage, '/camera/annotated/compressed', 10)
-        self.get_logger().info('Annotated Publisher Setup - Complete')
+        self.get_logger().info('Annotated Publisher Started')
+
+    def hb_callback(self, msg):
+        self.last_hb_time = time.time()
 
     def detection_callback(self, msg):
         if self.status == 'TRACKING':
@@ -67,6 +80,9 @@ class AnnotatedPublisher(Node):
     def image_callback(self, img_msg):
         try:
             now = time.time()
+
+            if now - self.last_hb_time > self.hb_timeout:
+                return
 
             if now - self.last_det_time > self.det_timeout:
                 self.latest_detections = []

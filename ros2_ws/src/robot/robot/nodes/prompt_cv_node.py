@@ -29,7 +29,7 @@ class PromptCVNode(Node):
         self.prompt = None
         _ = self.model_prompt.get_text_pe(["warmup"])
 
-        self.get_logger().info('Prompt CV Setup - Complete')
+        self.get_logger().info('Prompt CV Started')
 
     def state_callback(self, msg):
         if msg.prompt.strip():  # non-empty string
