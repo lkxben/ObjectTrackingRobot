@@ -1,4 +1,5 @@
 import React from 'react';
+import './AutoControls.css'
 
 function AutoControls({ prompt, autoTrackEnabled, setAutoTrackEnabled, onStart }) {
   return (
@@ -17,7 +18,10 @@ function AutoControls({ prompt, autoTrackEnabled, setAutoTrackEnabled, onStart }
           Auto Track
         </button>
 
-        <span className={`indicator ${autoTrackEnabled ? 'right' : 'left'}`} />
+        <span 
+          className='indicator'
+          style={{ transform: `translateX(${(autoTrackEnabled ? 100 : 0)}%)` 
+        }} />
       </div>
 
       <button

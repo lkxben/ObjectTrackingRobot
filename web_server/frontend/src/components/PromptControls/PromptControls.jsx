@@ -1,4 +1,5 @@
 import React from 'react';
+import './PromptControls.css'
 
 function PromptControls({ prompt, setPrompt, onSubmit, onClear }) {
   return (

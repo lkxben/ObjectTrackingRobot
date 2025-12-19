@@ -1,0 +1,71 @@
+import React from 'react'
+import './ManualControlPanel.css'
+
+export default function ManualControlPad({ startManual, stopManual, mode, setMode }) {
+  const manualEnabled = mode === 'MANUAL'
+
+  const toggleManual = () => {
+    if (manualEnabled) {
+      stopManual()
+      setMode('IDLE')
+    } else {
+      setMode('MANUAL')
+    }
+  }
+
+  const handleDirection = (delta) => {
+    if (mode !== 'MANUAL') return
+    startManual(delta)
+  }
+
+  const handleStop = () => {
+    if (mode !== 'MANUAL') return
+    stopManual()
+  }
+
+  return (
+    <div className="manual-pad">
+      <button
+        className="manual-center-btn"
+        onClick={toggleManual}
+      >
+        {manualEnabled ? 'Manual On' : 'Manual Off'}
+      </button>
+
+      <div className={`directions ${manualEnabled ? 'active' : 'disabled'}`}>
+        <button
+          className="up"
+          onMouseDown={() => handleDirection(1)}
+          onMouseUp={handleStop}
+          onMouseLeave={handleStop}
+        >
+          ▲
+        </button>
+        <button
+          className="down"
+          onMouseDown={() => handleDirection(-1)}
+          onMouseUp={handleStop}
+          onMouseLeave={handleStop}
+        >
+          ▼
+        </button>
+        <button
+          className="left"
+          onMouseDown={() => handleDirection(-1)}
+          onMouseUp={handleStop}
+          onMouseLeave={handleStop}
+        >
+          ◀
+        </button>
+        <button
+          className="right"
+          onMouseDown={() => handleDirection(1)}
+          onMouseUp={handleStop}
+          onMouseLeave={handleStop}
+        >
+          ▶
+        </button>
+      </div>
+    </div>
+  )
+}

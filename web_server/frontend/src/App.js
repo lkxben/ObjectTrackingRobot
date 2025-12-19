@@ -1,17 +1,16 @@
 import React, { useState, useRef } from 'react';
-import './App.css';
-import CameraPanel from './components/CameraPanel';
-import AutoControls from './components/AutoControls';
-import ManualControls from './components/ManualControls';
-import PromptControls from './components/PromptControls';
-import TrackControls from './components/TrackControls';
-import EventConsole from './components/EventConsole';
+import CameraPanel from './components/CameraPanel/CameraPanel';
+import ControlsPanel from './components/ControlsPanel/ControlsPanel'
+import ManualControlPanel from './components/ManualControlPanel/ManualControlPanel';
+import EventPanel from './components/EventPanel/EventPanel';
 
 import useRosConnection from './hooks/useRosConnection';
 import useManualControl from './hooks/useManualControl';
 import useCameraStream from './hooks/useCameraStream';
 import useEventLogs from './hooks/useEventLogs';
 import useInputPublisher from './hooks/useInputPublisher';
+
+import DashboardGrid from './layout/DashboardGrid/DashboardGrid';
 
 function App() {
   const [mode, setMode] = useState('IDLE');
@@ -67,58 +66,50 @@ function App() {
   };
 
   return (
-    <div className="dashboard-container">
-      <main className="dashboard-main">
+    <DashboardGrid
+      topLeft={
         <CameraPanel
           imgRef={imgRef}
           streamActive={streamActive}
           fps={fps}
-          mode={mode}
-          onModeChange={handleModeChange}
-        >
-          {mode === 'MANUAL' && (
-            <ManualControls
-              enabled={streamActive}
-              startManual={startManual}
-              stopManual={stopManual}
-            />
-          )}
+        />
+      }
 
-          {mode === 'AUTO' && (
-            <AutoControls
-              prompt={prompt}
-              autoTrackEnabled={autoTrackEnabled}
-              setAutoTrackEnabled={setAutoTrackEnabled}
-              onStart={handleAutoStart}
-            />
-          )}
-
-          {(mode === 'IDLE' || mode === 'TRACK' || mode === 'AUTO') && (
-            <PromptControls
-              prompt={prompt}
-              setPrompt={setPrompt}
-              onSubmit={handlePromptSubmit}
-              onClear={handleClearPrompt}
-            />
-          )}
-
-          {mode === 'TRACK' && (
-            <TrackControls
-              targetId={targetId}
-              setTargetId={setTargetId}
-              onSubmit={handleTargetIdSubmit}
-            />
-          )}
-        </CameraPanel>
-
-        <EventConsole
+      bottomLeft={
+        <EventPanel
           logs={filteredLogs}
           filterLevel={filterLevel}
           onFilterChange={setFilterLevel}
         />
-      </main>
-    </div>
-  );
+      }
+
+      topRight={
+      <ControlsPanel
+        mode={mode}
+        handleModeChange={handleModeChange}
+        prompt={prompt}
+        setPrompt={setPrompt}
+        targetId={targetId}
+        setTargetId={setTargetId}
+        autoTrackEnabled={autoTrackEnabled}
+        setAutoTrackEnabled={setAutoTrackEnabled}
+        handleAutoStart={handleAutoStart}
+        handlePromptSubmit={handlePromptSubmit}
+        handleClearPrompt={handleClearPrompt}
+        handleTargetIdSubmit={handleTargetIdSubmit}
+      />
+    }
+
+      bottomRight={
+        <ManualControlPanel
+          startManual={startManual}
+          stopManual={stopManual}
+          mode={mode}
+          setMode={setMode}
+        />
+      }
+    />
+  )
 }
 
 export default App;

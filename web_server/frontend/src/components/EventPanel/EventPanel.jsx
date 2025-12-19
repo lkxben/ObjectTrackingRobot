@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from 'react';
+import './EventPanel.css'
 
-function EventConsole({ logs, filterLevel, onFilterChange }) {
+function EventPanel({ logs, filterLevel, onFilterChange }) {
   const consoleRef = useRef(null);
 
   // Auto-scroll when logs change
@@ -33,4 +34,4 @@ function EventConsole({ logs, filterLevel, onFilterChange }) {
   );
 }
 
-export default EventConsole;
+export default EventPanel;

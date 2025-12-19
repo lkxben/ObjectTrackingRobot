@@ -1,0 +1,41 @@
+.mode-selector {
+  position: relative;
+  display: flex;
+  border: 2px solid #444;
+  border-radius: 16px;
+  overflow: hidden;
+  width: 100%;
+  background-color: #36383a;
+  height: 60px;
+  padding: 0 4px;
+}
+
+.mode-button {
+  flex: 1;
+  font-size: 1rem;
+  border: none;
+  background: none;
+  color: white;
+  cursor: pointer;
+  position: relative;
+  z-index: 1;
+}
+
+.mode-button:hover.not(.active) {
+  color: #f0995c;
+}
+
+.mode-button.active {
+  color: black;
+}
+
+.mode-slider {
+  position: absolute;
+  top: 4px;
+  bottom: 4px;
+  width:  calc((100% - 8px) / 3);
+  background-color: #f0995c;
+  border-radius: 10px;
+  transition: transform 0.4s ease;
+  z-index: 0;
+}

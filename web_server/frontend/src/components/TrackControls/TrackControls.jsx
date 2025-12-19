@@ -1,4 +1,5 @@
 import React from 'react';
+import './TrackControls.css'
 
 function TrackControls({ targetId, setTargetId, onSubmit }) {
   return (

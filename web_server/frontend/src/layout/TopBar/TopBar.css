@@ -1,0 +1,20 @@
+.top-bar {
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+  background: #0f172a;
+  color: #e5e7eb;
+  border-bottom: 1px solid #1f2933;
+}
+
+.top-bar-left {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.top-bar-right {
+  font-family: monospace;
+  font-size: 13px;
+}
