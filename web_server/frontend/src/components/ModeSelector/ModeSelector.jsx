@@ -6,15 +6,15 @@ function ModeSelector({ mode, onChange }) {
   const activeIndex = options.indexOf(mode);
 
   return (
-    <div className="mode-selector">
-      <div
+    <div className="mode-selector vertical">
+      <span
         className="mode-slider"
-        style={{ transform: `translateX(${activeIndex * 100}%)` }}
+        style={{ transform: `translateY(${activeIndex * 100}%)` }}
       />
-      {options.map((opt, idx) => (
+      {options.map(opt => (
         <button
           key={opt}
-          className={`mode-button ${activeIndex === idx ? 'active' : ''}`}
+          className={`mode-button ${mode === opt ? 'active' : ''}`}
           onClick={() => onChange(opt)}
         >
           {opt}

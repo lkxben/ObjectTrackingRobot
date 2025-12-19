@@ -1,13 +1,14 @@
 .mode-selector {
   position: relative;
   display: flex;
+  flex-direction: column;
   border: 2px solid #444;
-  border-radius: 16px;
+  border-radius: 14px;
   overflow: hidden;
-  width: 100%;
+  width: 80px;
+  height: 90%;
   background-color: #36383a;
-  height: 60px;
-  padding: 0 4px;
+  padding: 4px 0;
 }
 
 .mode-button {
@@ -21,7 +22,7 @@
   z-index: 1;
 }
 
-.mode-button:hover.not(.active) {
+.mode-button:hover:not(.active) {
   color: #f0995c;
 }
 
@@ -31,11 +32,11 @@
 
 .mode-slider {
   position: absolute;
-  top: 4px;
-  bottom: 4px;
-  width:  calc((100% - 8px) / 3);
+  left: 4px;
+  right: 4px;
+  height: calc((100% - 8px) / 3);
   background-color: #f0995c;
-  border-radius: 10px;
+  border-radius: 12px;
   transition: transform 0.4s ease;
   z-index: 0;
 }

@@ -1,17 +1,39 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import './PromptControls.css'
 
-function PromptControls({ prompt, setPrompt, onSubmit, onClear }) {
+function PromptControls({ prompt, setPrompt, onSubmit, onReset }) {
+  const applied = prompt !== "";
+  const inputRef = useRef(null);
+
+  const handleButton = () => {
+    if (!applied && inputRef.current.value.trim() !== '') {
+      const value = inputRef.current.value;
+      setPrompt(value);
+      onSubmit();
+    } else {
+      onReset();
+      setPrompt('');
+      inputRef.current.value = '';
+    }
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter') handleButton();
+  };
+
   return (
     <div className="prompt-inputs">
-      <input
-        type="text"
-        placeholder="Enter prompts, comma-separated"
-        value={prompt}
-        onChange={e => setPrompt(e.target.value)}
-      />
-      <button onClick={onSubmit}>Prompt</button>
-      <button onClick={onClear}>Clear</button>
+      <div className="input-wrapper">
+        <input
+          type="text"
+          placeholder="Filter annotations with prompts"
+          ref={inputRef}
+          onKeyDown={handleKeyDown}
+        />
+        <button className="prompt-btn" onClick={handleButton}>
+          {applied ? 'Reset' : 'Prompt'}
+        </button>
+      </div>
     </div>
   );
 }

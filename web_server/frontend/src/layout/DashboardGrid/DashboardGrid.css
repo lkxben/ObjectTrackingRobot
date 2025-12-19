@@ -9,54 +9,52 @@ html, body, #root {
 
 .dashboard-root {
   display: grid;
-  grid-template-rows: 1fr; /* no top bar */
+  grid-template-rows: 1fr;
   height: 100vh;
   width: 100vw;
 }
 
 .dashboard-grid {
   display: grid;
-  grid-template-columns: 7fr 4fr; 
-  grid-template-rows: 2fr 1fr; 
-  /* gap: 10px; */
+  /* grid-template-columns: 7fr 4fr; 
+  grid-template-rows: 2fr 1fr;  */
+  grid-template-columns: 10fr 9fr; 
+  grid-template-rows: 6fr 2fr; 
   height: 100%;
   width: 100%;
+  gap: 15px;
   box-sizing: border-box;
 }
 
-/* Top-left: 4:3, maxed to fit available space */
 .panel.top-left {
-  aspect-ratio: 16 / 9;
+  aspect-ratio: 4 / 3;
   width: 100%;
   height: 100%;
+  padding: 15px 0px 0px 15px;
+  box-sizing: border-box;
 }
 
-/* Top-right fills remaining width beside top-left */
 .panel.top-right {
   width: 100%;
   height: 100%;
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
+  padding: 15px 15px 0px 0px;
+  box-sizing: border-box;
 }
 
-/* Bottom-left fills under top-left */
 .panel.bottom-left {
   width: 100%;
   height: 100%;
   overflow: auto;
+  padding: 0px 0px 15px 15px;
+  box-sizing: border-box;
 }
 
-/* Bottom-right fills remaining space */
 .panel.bottom-right {
   width: 100%;
   height: 100%;
-}
-
-.panel.top-left,
-.panel.top-right,
-.panel.bottom-left,
-.panel.bottom-right {
-  padding: 20px;
+  padding: 0px 15px 15px 0px;
   box-sizing: border-box;
 }

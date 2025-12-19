@@ -16,26 +16,31 @@ export default function ControlsPanel({
   setAutoTrackEnabled,
   handleAutoStart,
   handlePromptSubmit,
-  handleClearPrompt,
-  handleTargetIdSubmit
+  handlePromptReset,
+  handleTargetIdSubmit,
+  handleTargetIdClear
 }) {
   return (
-    <div className="controls-stack">
+    <div className="controls-root">
+      <div className="controls-side">
+        <ModeSelector mode={mode} onChange={handleModeChange} />
+      </div>
+
       <div className="controls-main">
         <PromptControls
-            prompt={prompt}
-            setPrompt={setPrompt}
-            onSubmit={handlePromptSubmit}
-            onClear={handleClearPrompt}
+          prompt={prompt}
+          setPrompt={setPrompt}
+          onSubmit={handlePromptSubmit}
+          onReset={handlePromptReset}
         />
 
         {mode === 'AUTO' && (
-            <AutoControls
+          <AutoControls
             prompt={prompt}
             autoTrackEnabled={autoTrackEnabled}
             setAutoTrackEnabled={setAutoTrackEnabled}
             onStart={handleAutoStart}
-            />
+          />
         )}
 
         {mode === 'TRACK' && (
@@ -43,12 +48,9 @@ export default function ControlsPanel({
             targetId={targetId}
             setTargetId={setTargetId}
             onSubmit={handleTargetIdSubmit}
+            onClear={handleTargetIdClear}
           />
         )}
-      </div>
-
-      <div className="controls-footer">
-        <ModeSelector mode={mode} onChange={handleModeChange} />
       </div>
     </div>
   )

@@ -49,7 +49,7 @@ function App() {
     sendInput({ prompt: prompt });
   };
 
-  const handleClearPrompt = () => {
+  const handlePromptReset = () => {
     setPrompt('');
     setTargetId('');
     sendInput({ clearPrompt: true, clearTarget: true });
@@ -59,6 +59,11 @@ function App() {
     if (!targetId.trim()) return;
     sendInput({ targetId: targetId });
   };
+
+  const handleTargetIdClear = () => {
+    setTargetId('');
+    sendInput({ clearTarget: true });
+  }
 
   const handleAutoStart = () => {
     const modeToSend = autoTrackEnabled ? 'AUTO_TRACK' : 'AUTO_LOG';
@@ -76,29 +81,30 @@ function App() {
       }
 
       bottomLeft={
+        <ControlsPanel
+          mode={mode}
+          handleModeChange={handleModeChange}
+          prompt={prompt}
+          setPrompt={setPrompt}
+          targetId={targetId}
+          setTargetId={setTargetId}
+          autoTrackEnabled={autoTrackEnabled}
+          setAutoTrackEnabled={setAutoTrackEnabled}
+          handleAutoStart={handleAutoStart}
+          handlePromptSubmit={handlePromptSubmit}
+          handlePromptReset={handlePromptReset}
+          handleTargetIdSubmit={handleTargetIdSubmit}
+          handleTargetIdClear={handleTargetIdClear}
+        />
+      }
+
+      topRight={
         <EventPanel
           logs={filteredLogs}
           filterLevel={filterLevel}
           onFilterChange={setFilterLevel}
         />
       }
-
-      topRight={
-      <ControlsPanel
-        mode={mode}
-        handleModeChange={handleModeChange}
-        prompt={prompt}
-        setPrompt={setPrompt}
-        targetId={targetId}
-        setTargetId={setTargetId}
-        autoTrackEnabled={autoTrackEnabled}
-        setAutoTrackEnabled={setAutoTrackEnabled}
-        handleAutoStart={handleAutoStart}
-        handlePromptSubmit={handlePromptSubmit}
-        handleClearPrompt={handleClearPrompt}
-        handleTargetIdSubmit={handleTargetIdSubmit}
-      />
-    }
 
       bottomRight={
         <ManualControlPanel
