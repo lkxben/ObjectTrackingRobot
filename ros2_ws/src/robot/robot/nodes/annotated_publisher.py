@@ -16,7 +16,7 @@ class AnnotatedPublisher(Node):
         self.last_det_time = 0.0
         self.det_timeout = 0.5
         self.last_hb_time = 0.0
-        self.hb_timeout = 20.0
+        self.hb_timeout = 90.0
         
         self.image_sub = self.create_subscription(
             Image,
