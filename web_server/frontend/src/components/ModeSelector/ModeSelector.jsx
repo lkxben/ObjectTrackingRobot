@@ -3,7 +3,8 @@ import './ModeSelector.css';
 
 function ModeSelector({ mode, onChange }) {
   const options = ['IDLE', 'TRACK', 'AUTO'];
-  const activeIndex = options.indexOf(mode);
+  const sliderMode = ['AUTO_LOG', 'AUTO_TRACK'].includes(mode) ? 'AUTO' : mode;
+  const activeIndex = options.indexOf(sliderMode);
 
   return (
     <div className="mode-selector vertical">

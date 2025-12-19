@@ -7,6 +7,7 @@ import './ControlsPanel.css'
 
 export default function ControlsPanel({
   mode,
+  setMode,
   handleModeChange,
   prompt,
   setPrompt,
@@ -34,9 +35,13 @@ export default function ControlsPanel({
           onReset={handlePromptReset}
         />
 
-        {mode === 'AUTO' && (
+        {['AUTO_LOG', 'AUTO_TRACK', 'AUTO'].includes(mode) && (
           <AutoControls
+            mode={mode}
+            setMode={setMode}
             prompt={prompt}
+            setPrompt={setPrompt}
+            handlePromptReset={handlePromptReset}
             autoTrackEnabled={autoTrackEnabled}
             setAutoTrackEnabled={setAutoTrackEnabled}
             onStart={handleAutoStart}

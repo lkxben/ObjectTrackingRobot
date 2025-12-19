@@ -1,6 +1,7 @@
 .auto-controls {
   display: flex;
   flex-direction: column;
+  align-items: center;
   gap: 12px;
   width: 100%;
 }
@@ -14,6 +15,7 @@
   background-color: #36383a;
   height: 50px;
   padding: 0 4px;
+  width: 50%;
 }
 
 .segmented-control button {
@@ -47,8 +49,12 @@
   z-index: 0;
 }
 
+.indicator.hover {
+  background-color: #e68b50;
+}
+
 .action-btn {
-  width: 100%;
+  width: 50%;
   padding: 12px;
   background-color: #f0995c;
   color: white;

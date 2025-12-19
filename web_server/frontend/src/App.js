@@ -67,6 +67,7 @@ function App() {
 
   const handleAutoStart = () => {
     const modeToSend = autoTrackEnabled ? 'AUTO_TRACK' : 'AUTO_LOG';
+    setMode(modeToSend);
     sendInput({ mode: modeToSend, prompt, clearPrompt: false, clearTarget: true });
   };
 
@@ -83,6 +84,7 @@ function App() {
       bottomLeft={
         <ControlsPanel
           mode={mode}
+          setMode={setMode}
           handleModeChange={handleModeChange}
           prompt={prompt}
           setPrompt={setPrompt}
