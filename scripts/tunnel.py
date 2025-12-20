@@ -11,7 +11,8 @@ BACKEND = "wss://objecttrackingrobot.onrender.com/rosbridge?client=localrosbridg
 BACKEND_TOPICS = [
     {"topic": "/input", "type": "robot_msgs/Input" },
     {"topic": "/motor/manual", "type":"std_msgs/Float32" },
-    {"topic": "/viewer/heartbeat", "type":"std_msgs/Empty" }
+    {"topic": "/viewer/heartbeat", "type":"std_msgs/Empty" },
+    {"topic": "/annotated", "type":"std_msgs/Bool" }
 ]
 
 LOCAL_TOPICS = [
