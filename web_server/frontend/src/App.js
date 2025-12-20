@@ -1,4 +1,5 @@
 import React, { useState, useRef } from 'react';
+import './global.css'
 import CameraPanel from './components/CameraPanel/CameraPanel';
 import ControlsPanel from './components/ControlsPanel/ControlsPanel'
 import ManualControlPanel from './components/ManualControlPanel/ManualControlPanel';
@@ -56,9 +57,10 @@ function App() {
   };
 
   const handleTargetIdSubmit = () => {
-    if (!targetId.trim()) return;
-    sendInput({ targetId: targetId });
-  };
+    const value = Number(targetId.trim())
+    if (!Number.isInteger(value)) return;
+    sendInput({ targetId: value })
+  }
 
   const handleTargetIdClear = () => {
     setTargetId('');

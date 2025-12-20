@@ -73,3 +73,18 @@
 .action-btn:not(:disabled):hover {
   background-color: #f0995c;
 }
+
+.auto-controls.locked {
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+.auto-controls.locked .action-btn {
+  pointer-events: auto;
+  opacity: 1;
+}
+
+.segmented-control.locked {
+  opacity: 0.4;
+  pointer-events: none;
+}

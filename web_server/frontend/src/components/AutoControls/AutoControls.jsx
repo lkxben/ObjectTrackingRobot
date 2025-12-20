@@ -1,52 +1,74 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react'
 import './AutoControls.css'
 
-function AutoControls({ mode, setMode, prompt, setPrompt, handlePromptReset, autoTrackEnabled, setAutoTrackEnabled, onStart }) {
-  const [hovering, setHovering] = useState(false);
+function AutoControls({
+  mode,
+  setMode,
+  prompt,
+  setPrompt,
+  handlePromptReset,
+  autoTrackEnabled,
+  setAutoTrackEnabled,
+  onStart
+}) {
+  const [hovering, setHovering] = useState(false)
+
+  const isAutoRunning = ['AUTO_LOG', 'AUTO_TRACK'].includes(mode)
+
+  const lastAutoRef = useRef(autoTrackEnabled)
+
+  if (!isAutoRunning) {
+    lastAutoRef.current = autoTrackEnabled
+  }
 
   return (
     <div className="auto-controls">
-      <div className="segmented-control">
+      <div className={`segmented-control ${isAutoRunning ? 'locked' : ''}`}>
         <button
-          className={!autoTrackEnabled ? 'active' : ''}
-          onClick={() => setAutoTrackEnabled(false)}
-          onMouseEnter={() => !autoTrackEnabled && setHovering(true)}
+          className={!lastAutoRef.current ? 'active' : ''}
+          onClick={() => !isAutoRunning && setAutoTrackEnabled(false)}
+          onMouseEnter={() => !lastAutoRef.current && setHovering(true)}
           onMouseLeave={() => setHovering(false)}
+          disabled={isAutoRunning}
         >
           Log Only
         </button>
+
         <button
-          className={autoTrackEnabled ? 'active' : ''}
-          onClick={() => setAutoTrackEnabled(true)}
-          onMouseEnter={() => autoTrackEnabled && setHovering(true)}
+          className={lastAutoRef.current ? 'active' : ''}
+          onClick={() => !isAutoRunning && setAutoTrackEnabled(true)}
+          onMouseEnter={() => lastAutoRef.current && setHovering(true)}
           onMouseLeave={() => setHovering(false)}
+          disabled={isAutoRunning}
         >
           Auto Track
         </button>
 
-        <span 
+        <span
           className={`indicator ${hovering ? 'hover' : ''}`}
-          style={{ transform: `translateX(${(autoTrackEnabled ? 100 : 0)}%)` }}
+          style={{
+            transform: `translateX(${lastAutoRef.current ? 100 : 0}%)`
+          }}
         />
       </div>
 
       <button
         className="action-btn"
-        // disabled={!prompt.trim()}
+        disabled={!prompt.trim() && autoTrackEnabled && !isAutoRunning}
         onClick={() => {
-          if (mode === 'AUTO_LOG' || mode === 'AUTO_TRACK') {
-            setPrompt('');
-            handlePromptReset();
-            setMode('IDLE');
+          if (isAutoRunning) {
+            setPrompt('')
+            handlePromptReset()
+            setMode('IDLE')
           } else {
-            onStart();
+            onStart()
           }
         }}
       >
-        {['AUTO_LOG', 'AUTO_TRACK'].includes(mode) ? 'Stop' : 'Start'}
+        {isAutoRunning ? 'Stop' : 'Start'}
       </button>
     </div>
-  );
+  )
 }
 
-export default AutoControls;
+export default AutoControls

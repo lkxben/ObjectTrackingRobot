@@ -44,3 +44,20 @@
 .mode-slider.hover {
   background-color: #e68b50;
 }
+
+.mode-selector.locked {
+  opacity: 0.4;
+}
+
+.mode-selector.locked .mode-button.active {
+  opacity: 1;
+  color: #000;
+}
+
+.mode-selector.manual .mode-slider {
+  opacity: 0;
+}
+
+.mode-selector.locked {
+  pointer-events: none;
+}

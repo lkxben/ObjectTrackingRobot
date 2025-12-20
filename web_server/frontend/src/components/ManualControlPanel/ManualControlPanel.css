@@ -16,7 +16,7 @@
   border-radius: 50%;
   background-color: #36383a;
   color: white;
-  font-weight: bold;
+  font-weight: normal;
   border: none;
   cursor: pointer;
   z-index: 2;
@@ -64,7 +64,7 @@
 .up {
   top: 0;
   left: 50%;
-  transform: translateX(-50%);
+  transform: translateX(-50%) scale(0.95);
 }
 
 .down {

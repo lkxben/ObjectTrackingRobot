@@ -1,41 +1,48 @@
-import React, { useRef } from 'react';
+import React, { useState, useEffect } from 'react'
 import './TrackControls.css'
 
 function TrackControls({ targetId, setTargetId, onSubmit, onClear }) {
-  const applied = targetId !== '';
-  const inputRef = useRef(null);
+  const [inputValue, setInputValue] = useState('')
+
+  // Keep input in sync with external reset
+  useEffect(() => {
+    if (targetId === '') setInputValue('')
+  }, [targetId])
+
+  const applied = targetId !== ''
 
   const handleButton = () => {
-    if (!applied && inputRef.current.value.trim() !== '') {
-      const value = inputRef.current.value;
-      setTargetId(value);
-      onSubmit();
+    const trimmed = inputValue.trim()
+    if (!applied && trimmed !== '') {
+      setTargetId(trimmed)
+      onSubmit()
     } else {
-      onClear();
-      setTargetId('');
-      inputRef.current.value = '';
+      onClear()
+      setTargetId('')
+      setInputValue('')
     }
-  };
+  }
 
   const handleKeyDown = (e) => {
-    if (e.key === 'Enter') handleButton();
-  };
+    if (e.key === 'Enter') handleButton()
+  }
 
   return (
     <div className="track-inputs">
-      <div className='input-wrapper'>
+      <div className="input-wrapper">
         <input
           type="text"
           placeholder="Track by ID"
-          ref={inputRef}
+          value={inputValue}
+          onChange={(e) => setInputValue(e.target.value)}
           onKeyDown={handleKeyDown}
         />
-        <button className="track-btn" onClick={onSubmit}>
-          Track
+        <button className="track-btn" onClick={handleButton}>
+          {applied ? 'Clear' : 'Track'}
         </button>
       </div>
     </div>
-  );
+  )
 }
 
-export default TrackControls;
+export default TrackControls

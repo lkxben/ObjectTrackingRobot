@@ -34,7 +34,7 @@ export default function ManualControlPad({ startManual, stopManual, mode, setMod
 
       <div className={`directions ${manualEnabled ? 'active' : 'disabled'}`}>
         <button
-          className="up"
+          className="up no-scale"
           onMouseDown={() => handleDirection(1)}
           onMouseUp={handleStop}
           onMouseLeave={handleStop}
@@ -42,7 +42,7 @@ export default function ManualControlPad({ startManual, stopManual, mode, setMod
           ▲
         </button>
         <button
-          className="down"
+          className="down no-scale"
           onMouseDown={() => handleDirection(-1)}
           onMouseUp={handleStop}
           onMouseLeave={handleStop}
@@ -50,7 +50,7 @@ export default function ManualControlPad({ startManual, stopManual, mode, setMod
           ▼
         </button>
         <button
-          className="left"
+          className="left no-scale"
           onMouseDown={() => handleDirection(-1)}
           onMouseUp={handleStop}
           onMouseLeave={handleStop}
@@ -58,7 +58,7 @@ export default function ManualControlPad({ startManual, stopManual, mode, setMod
           ◀
         </button>
         <button
-          className="right"
+          className="right no-scale"
           onMouseDown={() => handleDirection(1)}
           onMouseUp={handleStop}
           onMouseLeave={handleStop}
