@@ -28,7 +28,7 @@ class SOTNode(Node):
         self.status = None
         self.last_seen = 0
         self.MAX_LOST_TIME = 2.0
-        self.CONFIDENCE_THRESHOLD = 0.15
+        self.CONFIDENCE_THRESHOLD = 0.5
 
         self.net = SiamRPNBIG()
         self.net.load_state_dict(torch.load('/root/DaSiamRPN/code/SiamRPNBIG.model', map_location=torch.device('cpu'), weights_only=False))

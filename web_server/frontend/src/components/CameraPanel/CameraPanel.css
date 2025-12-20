@@ -1,0 +1,45 @@
+.camera-card {
+  background-color: #414345;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.6);
+  border-radius: 16px;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.camera-image-wrapper {
+  background-color: #111;
+  border-radius: 16px;
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+}
+
+.camera-image-wrapper img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.placeholder-text {
+  color: #888;
+  font-size: 1rem;
+}
+
+.camera-fps {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  background-color: rgba(0, 0, 0, 0.6);
+  padding: 2px 6px;
+  font-size: 0.8rem;
+  border-radius: 4px;
+  color: #0f0;
+  z-index: 2;
+}

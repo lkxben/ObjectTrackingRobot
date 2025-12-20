@@ -1,7 +1,7 @@
 import rclpy
 from rclpy.node import Node
 from sensor_msgs.msg import Image, CompressedImage
-from std_msgs.msg import Empty
+from std_msgs.msg import Empty, Bool
 from cv_bridge import CvBridge
 from robot_msgs.msg import DetectionArray, TurretState
 import cv2
@@ -16,7 +16,7 @@ class AnnotatedPublisher(Node):
         self.last_det_time = 0.0
         self.det_timeout = 0.5
         self.last_hb_time = 0.0
-        self.hb_timeout = 20.0
+        self.hb_timeout = 90.0
         
         self.image_sub = self.create_subscription(
             Image,
@@ -46,10 +46,21 @@ class AnnotatedPublisher(Node):
             10
         )
 
+        self.annotated = True
+        self.annotated_sub = self.create_subscription(
+            Bool,
+            '/annotated',
+            self.annotated_callback,
+            10
+        )
+
         self.target_id = -1
         self.status = None
         self.pub = self.create_publisher(CompressedImage, '/camera/annotated/compressed', 10)
         self.get_logger().info('Annotated Publisher Started')
+
+    def annotated_callback(self, msg):
+        self.annotated = msg.data
 
     def hb_callback(self, msg):
         self.last_hb_time = time.time()
@@ -89,27 +100,28 @@ class AnnotatedPublisher(Node):
 
             frame = self.bridge.imgmsg_to_cv2(img_msg, desired_encoding='bgr8')
 
-            for det in self.latest_detections:
-                x1, y1, x2, y2 = int(det.x1), int(det.y1), int(det.x2), int(det.y2)
-                class_name = det.class_name
-                conf = det.confidence
-                track_id = det.track_id
+            if self.annotated:
+                for det in self.latest_detections:
+                    x1, y1, x2, y2 = int(det.x1), int(det.y1), int(det.x2), int(det.y2)
+                    class_name = det.class_name
+                    conf = det.confidence
+                    track_id = det.track_id
 
-                # Draw box
-                cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 0, 255), 2)
+                    # Draw box
+                    cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 0, 255), 2)
 
-                # Text label
-                label = f"{class_name} {conf:.2f} {track_id}"
-                cv2.putText(
-                    frame,
-                    label,
-                    (x1, y1 - 5),
-                    cv2.FONT_ITALIC,
-                    0.5,
-                    (0, 0, 255),
-                    1,
-                    cv2.LINE_8
-                )
+                    # Text label
+                    label = f"{class_name} {conf:.2f} {track_id}"
+                    cv2.putText(
+                        frame,
+                        label,
+                        (x1, y1 - 5),
+                        cv2.FONT_ITALIC,
+                        0.5,
+                        (0, 0, 255),
+                        1,
+                        cv2.LINE_8
+                    )
 
             compressed_msg = self.bridge.cv2_to_compressed_imgmsg(frame, dst_format='jpeg')
             self.pub.publish(compressed_msg)

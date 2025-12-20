@@ -1,34 +1,27 @@
-import React, { useEffect, useState, useRef, useCallback } from 'react';
-import ROSLIB from 'roslib';
-import './App.css';
+import React, { useState, useRef } from 'react';
+import './global.css'
+import CameraPanel from './components/CameraPanel/CameraPanel';
+import ControlsPanel from './components/ControlsPanel/ControlsPanel'
+import ManualControlPanel from './components/ManualControlPanel/ManualControlPanel';
+import EventPanel from './components/EventPanel/EventPanel';
+
+import useRosConnection from './hooks/useRosConnection';
+import useManualControl from './hooks/useManualControl';
+import useCameraStream from './hooks/useCameraStream';
+import useEventLogs from './hooks/useEventLogs';
+import useInputPublisher from './hooks/useInputPublisher';
+
+import DashboardGrid from './layout/DashboardGrid/DashboardGrid';
 
 function App() {
-  const [backendStatus, setBackendStatus] = useState('Connecting...');
-  const [rosStatus, setRosStatus] = useState('Unknown');
-  const [fps, setFps] = useState(0);
-  const [trackingStatus, setTrackingStatus] = useState('');
-
   const [mode, setMode] = useState('IDLE');
   const [prompt, setPrompt] = useState('');
   const [targetId, setTargetId] = useState('');
-  const [eventLogs, setEventLogs] = useState([]);
-  const [filterLevel, setFilterLevel] = useState('debug');
+  const [annotated, setAnnotated] = useState(true);
+  const [filterLevel, setFilterLevel] = useState('info');
   const [autoTrackEnabled, setAutoTrackEnabled] = useState(false);
 
   const imgRef = useRef(null);
-  const lastImageTimeRef = useRef(Date.now());
-  const localRosOnlineRef = useRef(false);
-  const frameCountRef = useRef(0);
-  const lastFpsUpdateRef = useRef(Date.now());
-  const rosRef = useRef(null);
-  const cameraTopicRef = useRef(null);
-  const inputTopicRef = useRef(null);
-  const logTopicRef = useRef(null);
-  const manualTopicRef = useRef(null);
-  const manualIntervalRef = useRef(null);
-  const manualKeyActiveRef = useRef(null);
-  const heartbeatTopicRef = useRef(null);
-  const consoleRef = useRef(null);
 
   const severityRank = {
     debug: 1,
@@ -37,344 +30,102 @@ function App() {
     error: 4,
   };
 
-  // auto scroll log
-  useEffect(() => {
-    if (consoleRef.current) {
-      consoleRef.current.scrollTop = consoleRef.current.scrollHeight;
-    }
-  }, [eventLogs]);
+  const { rosRef, cameraTopicRef, inputTopicRef, logTopicRef, manualTopicRef, annotatedTopicRef } = useRosConnection();
+  const { fps, streamActive } = useCameraStream(cameraTopicRef, imgRef);
+  const { filteredLogs, clearLogs } = useEventLogs(logTopicRef, severityRank, filterLevel);
+  const { startManual, stopManual } = useManualControl(manualTopicRef, streamActive, mode);
+  const { sendInput } = useInputPublisher(inputTopicRef);
 
-  useEffect(() => {
-    const ros = new ROSLIB.Ros({ url: 'wss://objecttrackingrobot.onrender.com/rosbridge?client=frontend' });
-    rosRef.current = ros;
-    ros.on('connection', () => setBackendStatus('Connected'));
-    ros.on('error', () => setBackendStatus('Error connecting'));
-    ros.on('close', () => setBackendStatus('Disconnected'));
-
-    inputTopicRef.current = new ROSLIB.Topic({
-      ros,
-      name: '/input',
-      messageType: 'robot_msgs/Input',
-    });
-    logTopicRef.current = new ROSLIB.Topic({
-      ros,
-      name: '/turret/log',
-      messageType: 'robot_msgs/TurretLog'
-    });
-    logTopicRef.current.subscribe((msg) => {
-      const logEntry = {
-        level: msg.level,
-        message: `[${new Date(msg.stamp.sec * 1000).toLocaleTimeString()}] ${msg.message}`
-      };
-
-      setEventLogs(prev => {
-        const newLogs = [...prev, logEntry].slice(-100);
-        return newLogs;
-      });
-    });
-
-    manualTopicRef.current = new ROSLIB.Topic({
-      ros,
-      name: '/motor/manual',
-      messageType: 'std_msgs/Float32',
-    });
-    
-    cameraTopicRef.current = new ROSLIB.Topic({ ros, name: '/camera/annotated/compressed', messageType: 'sensor_msgs/CompressedImage' });
-    cameraTopicRef.current.subscribe((msg) => {
-      lastImageTimeRef.current = Date.now();
-      frameCountRef.current += 1;
-      const now = Date.now();
-      if (now - lastFpsUpdateRef.current >= 1000) {
-        setFps(frameCountRef.current);
-        frameCountRef.current = 0;
-        lastFpsUpdateRef.current = now;
-      }
-      if (!msg.data) return;
-      if (!localRosOnlineRef.current) {
-        localRosOnlineRef.current = true;
-        setRosStatus('Online');
-      }
-      if (imgRef.current) imgRef.current.src = 'data:image/jpeg;base64,' + msg.data;
-    });
-
-    const interval = setInterval(() => {
-      if (Date.now() - lastImageTimeRef.current > 5000) {
-        localRosOnlineRef.current = false;
-        setRosStatus('Offline');
-      }
-    }, 1000);
-
-    return () => clearInterval(interval);
-  }, []);
-
-  const sendInput = ({ mode, prompt, targetId, clearPrompt, clearTarget }) => {
-    const msg = new ROSLIB.Message({
-      mode: mode ?? "",
-      prompt: prompt ?? "",
-      target_id: targetId !== undefined ? parseInt(targetId, 10) : -1,
-      clear_prompt: !!clearPrompt,
-      clear_target_id: !!clearTarget
-    });
-
-    inputTopicRef.current.publish(msg);
-  };
-
-  useEffect(() => {
-    if (!rosRef.current) return;
-
-    const heartbeatTopic = new ROSLIB.Topic({
-      ros: rosRef.current,
-      name: '/viewer/heartbeat',
-      messageType: 'std_msgs/Empty'
-    });
-
-    const interval = setInterval(() => {
-      heartbeatTopic.publish(new ROSLIB.Message({}));
-    }, 30000);
-
-    return () => clearInterval(interval);
-  }, []);
-
-  const handleModeChange = (e) => {
-    const newMode = e.target.value;
+  const handleModeChange = (newMode) => {
     setMode(newMode);
-
-    setPrompt('');
     setTargetId('');
-    setTrackingStatus('');
-    setEventLogs([]);
     if (newMode !== 'AUTO') {
-      sendInput({ mode: newMode, clearPrompt: true, clearTarget: true });
+      sendInput({ mode: newMode, clearTarget: true });
     }
   };
 
-  const handlePromptSubmit = () => {
-    if (!prompt.trim()) return;
-    sendInput({ prompt: prompt });
+  const handlePromptSubmit = (promptValue) => {
+    if (!promptValue.trim()) return;
+    setPrompt(promptValue);
+    sendInput({ prompt: promptValue });
   };
 
-  const handleClearPrompt = () => {
+  const handlePromptReset = () => {
     setPrompt('');
     setTargetId('');
-    setTrackingStatus('');
     sendInput({ clearPrompt: true, clearTarget: true });
   };
 
-  const handleTargetIdSubmit = () => {
-    if (!targetId.trim()) return;
-    sendInput({ targetId: targetId });
-    setTrackingStatus(`Tracking "${prompt}" (ID ${targetId})`);
+  const handleTargetIdSubmit = (targetValue) => {
+    const value = Number(targetValue.trim())
+    if (!Number.isInteger(value)) return;
+    setTargetId(value);
+    sendInput({ targetId: value });
+  }
+
+  const handleTargetIdClear = () => {
+    setTargetId('');
+    sendInput({ clearTarget: true });
+  }
+
+  const toggleAnnotation = () => {
+    annotatedTopicRef.current.publish({data : !annotated});
+    setAnnotated(prev => !prev);
+  }
+
+  const handleAutoStart = () => {
+    const modeToSend = autoTrackEnabled ? 'AUTO_TRACK' : 'AUTO_LOG';
+    setMode(modeToSend);
+    sendInput({ mode: modeToSend, prompt, clearPrompt: false, clearTarget: true });
   };
-
-  const sendManual = (delta) => {
-    if (!manualTopicRef.current) return;
-
-    manualTopicRef.current.publish(
-      new ROSLIB.Message({ data: delta })
-    );
-  };
-
-  const startManual = useCallback((delta) => {
-    if (!manualTopicRef.current) return;
-    sendManual(delta);
-    manualIntervalRef.current = setInterval(() => sendManual(delta), 50);
-  }, []);
-
-  const stopManual = () => {
-    if (manualIntervalRef.current) {
-      clearInterval(manualIntervalRef.current);
-      manualIntervalRef.current = null;
-    }
-  };
-
-  const streamActive = rosStatus === 'Online' && Date.now() - lastImageTimeRef.current < 5000;
-  useEffect(() => {
-    if (!streamActive) {
-      stopManual();
-    }
-  }, [streamActive]);
-
-  const filteredLogs = eventLogs.filter(log => {
-    return severityRank[log.level] >= severityRank[filterLevel];
-  });
-
-  useEffect(() => {
-    const handleKeyDown = (e) => {
-      if (mode !== 'MANUAL') return;
-      if (!streamActive) return;
-      if (manualKeyActiveRef.current !== null) return;
-
-      if (['ArrowLeft', 'ArrowRight'].includes(e.key)) {
-        e.preventDefault();
-      }
-
-      if (e.key === 'a' || e.key === 'ArrowLeft') {
-        manualKeyActiveRef.current = -1;
-        startManual(-1);
-      }
-
-      if (e.key === 'd' || e.key === 'ArrowRight') {
-        manualKeyActiveRef.current = 1;
-        startManual(1);
-      }
-    };
-
-    const handleKeyUp = (e) => {
-      if (
-        e.key === 'a' ||
-        e.key === 'd' ||
-        e.key === 'ArrowLeft' ||
-        e.key === 'ArrowRight'
-      ) {
-        manualKeyActiveRef.current = null;
-        stopManual();
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    window.addEventListener('keyup', handleKeyUp);
-
-    return () => {
-      window.removeEventListener('keydown', handleKeyDown);
-      window.removeEventListener('keyup', handleKeyUp);
-    };
-  }, [mode, streamActive, startManual]);
 
   return (
-    <div className="dashboard-container">
-      <main className="dashboard-main">
-        <section className="camera-card">
-          <div className="camera-image-wrapper">
-            {streamActive ? (
-              <img ref={imgRef} src="" alt="Camera stream" />
-            ) : (
-              <div className="placeholder-text">Waiting for stream...</div>
-            )}
-          </div>
+    <DashboardGrid
+      topLeft={
+        <CameraPanel
+          imgRef={imgRef}
+          streamActive={streamActive}
+          fps={fps}
+        />
+      }
 
-          <div className="camera-status">
-            <span>Backend: {backendStatus}</span>
-            <span>Local ROS: {rosStatus}</span>
-            <span>FPS: {fps}</span>
-          </div>
+      bottomLeft={
+        <ControlsPanel
+          mode={mode}
+          handleModeChange={handleModeChange}
+          prompt={prompt}
+          targetId={targetId}
+          annotated={annotated}
+          setTargetId={setTargetId}
+          autoTrackEnabled={autoTrackEnabled}
+          setAutoTrackEnabled={setAutoTrackEnabled}
+          handleAutoStart={handleAutoStart}
+          handlePromptSubmit={handlePromptSubmit}
+          handlePromptReset={handlePromptReset}
+          handleTargetIdSubmit={handleTargetIdSubmit}
+          handleTargetIdClear={handleTargetIdClear}
+          toggleAnnotation={toggleAnnotation}
+        />
+      }
 
-          <div className="mode-card">
-            <select value={mode} onChange={handleModeChange}>
-              <option value="IDLE">IDLE</option>
-              <option value="MANUAL">MANUAL</option>
-              <option value="TRACK">TRACK</option>
-              <option value="AUTO">AUTO</option>
-            </select>
-          </div>
+      topRight={
+        <EventPanel
+          logs={filteredLogs}
+          filterLevel={filterLevel}
+          onFilterChange={setFilterLevel}
+        />
+      }
 
-          {mode === 'MANUAL' && (
-            <div className="manual-controls">
-              <button
-                disabled={!streamActive}
-                onMouseDown={() => startManual(-1)}
-                onMouseUp={stopManual}
-                onMouseLeave={stopManual}
-              >
-                ◀
-              </button>
-
-              <button
-                disabled={!streamActive}
-                onMouseDown={() => startManual(1)}
-                onMouseUp={stopManual}
-                onMouseLeave={stopManual}
-              >
-                ▶
-              </button>
-            </div>
-          )}
-
-          {mode === 'AUTO' && (
-            <div className="auto-controls">
-              <div className="segmented-control">
-                <button
-                  className={!autoTrackEnabled ? 'active' : ''}
-                  onClick={() => setAutoTrackEnabled(false)}
-                >
-                  Log Only
-                </button>
-                <button
-                  className={autoTrackEnabled ? 'active' : ''}
-                  onClick={() => setAutoTrackEnabled(true)}
-                >
-                  Auto Track
-                </button>
-
-                <span className={`indicator ${autoTrackEnabled ? 'right' : 'left'}`} />
-              </div>
-
-              <button class="action-btn" id="start-btn"
-                onClick={() => {
-                  const modeToSend = autoTrackEnabled ? 'AUTO_TRACK' : 'AUTO_LOG';
-                  sendInput({ mode: modeToSend, prompt, clearPrompt: false, clearTarget: true });
-                  setTrackingStatus(`${autoTrackEnabled ? "Tracking" : "Logging"} "${prompt}"`);
-                }}
-                disabled={!prompt.trim()}
-              >
-                Start
-              </button>
-            </div>
-          )}
-
-          {(mode === 'IDLE' || mode === 'TRACK' || mode === 'AUTO') && (
-            <div className="prompt-inputs">
-              <input
-                type="text"
-                placeholder="Enter prompts, comma-separated"
-                value={prompt}
-                onChange={e => setPrompt(e.target.value)}
-              />
-              <button onClick={handlePromptSubmit}>Prompt</button>
-              <button onClick={handleClearPrompt}>Clear</button>
-            </div>
-          )}
-
-          {mode === 'TRACK' && (
-            <div className="track-inputs">
-              <input
-                type="number"
-                placeholder="Enter target ID"
-                value={targetId}
-                onChange={e => setTargetId(e.target.value)}
-              />
-              <button onClick={handleTargetIdSubmit}>Track ID</button>
-            </div>
-          )}
-
-          {trackingStatus && (
-            <div className="tracking-status">
-              {trackingStatus}
-            </div>
-          )}
-        </section>
-
-        <section className="event-console">
-          <div className="event-console-header">
-            <h3>Event Log</h3>
-            <select value={filterLevel} onChange={e => setFilterLevel(e.target.value)}>
-              <option value="debug">Debug</option>
-              <option value="info">Info</option>
-              <option value="warning">Warning</option>
-              <option value="error">Error</option>
-            </select>
-          </div>
-
-          <div className="log-messages" ref={consoleRef}>
-            {filteredLogs.map((log, idx) => (
-              <div key={idx} className={log.level}>
-                {log.message}
-              </div>
-            ))}
-          </div>
-        </section>
-      </main>
-    </div>
-  );
+      bottomRight={
+        <ManualControlPanel
+          startManual={startManual}
+          stopManual={stopManual}
+          mode={mode}
+          handleModeChange={handleModeChange}
+        />
+      }
+    />
+  )
 }
 
 export default App;
