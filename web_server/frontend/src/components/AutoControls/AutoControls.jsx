@@ -3,10 +3,9 @@ import './AutoControls.css'
 
 function AutoControls({
   mode,
-  setMode,
   prompt,
-  setPrompt,
   handlePromptReset,
+  handleModeChange,
   autoTrackEnabled,
   setAutoTrackEnabled,
   onStart
@@ -57,9 +56,8 @@ function AutoControls({
         disabled={!prompt.trim() && autoTrackEnabled && !isAutoRunning}
         onClick={() => {
           if (isAutoRunning) {
-            setPrompt('')
             handlePromptReset()
-            setMode('IDLE')
+            handleModeChange('IDLE')
           } else {
             onStart()
           }

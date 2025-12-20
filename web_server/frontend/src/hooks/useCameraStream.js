@@ -3,7 +3,7 @@ import { useState, useEffect, useRef } from 'react';
 export default function useCameraStream(cameraTopicRef, imgRef) {
   const [fps, setFps] = useState(0);
   const [streamActive, setStreamActive] = useState(false);
-  const lastImageTimeRef = useRef(Date.now() - 10);
+  const lastImageTimeRef = useRef(0);
   const frameCountRef = useRef(0);
   const lastFpsUpdateRef = useRef(Date.now());
 

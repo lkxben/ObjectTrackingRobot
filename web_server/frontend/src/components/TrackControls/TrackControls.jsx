@@ -1,31 +1,33 @@
-import React, { useState, useEffect } from 'react'
-import './TrackControls.css'
+import React, { useState, useEffect } from 'react';
+import './TrackControls.css';
 
-function TrackControls({ targetId, setTargetId, onSubmit, onClear }) {
-  const [inputValue, setInputValue] = useState('')
+function TrackControls({ targetId, onSubmit, onClear }) {
+  const [inputValue, setInputValue] = useState('');
+  const [applied, setApplied] = useState(false);
 
-  // Keep input in sync with external reset
   useEffect(() => {
-    if (targetId === '') setInputValue('')
-  }, [targetId])
-
-  const applied = targetId !== ''
+    if (targetId === '') {
+      setInputValue('');
+      setApplied(false);
+    }
+  }, [targetId]);
 
   const handleButton = () => {
-    const trimmed = inputValue.trim()
+    const trimmed = inputValue.trim();
+
     if (!applied && trimmed !== '') {
-      setTargetId(trimmed)
-      onSubmit()
-    } else {
-      onClear()
-      setTargetId('')
-      setInputValue('')
+      onSubmit(trimmed);
+      setApplied(true);
+    } else if (applied) {
+      onClear();
+      setInputValue('');
+      setApplied(false);
     }
-  }
+  };
 
   const handleKeyDown = (e) => {
-    if (e.key === 'Enter') handleButton()
-  }
+    if (e.key === 'Enter') handleButton();
+  };
 
   return (
     <div className="track-inputs">
@@ -42,7 +44,7 @@ function TrackControls({ targetId, setTargetId, onSubmit, onClear }) {
         </button>
       </div>
     </div>
-  )
+  );
 }
 
-export default TrackControls
+export default TrackControls;

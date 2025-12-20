@@ -1,15 +1,15 @@
 import React from 'react'
 import './ManualControlPanel.css'
 
-export default function ManualControlPad({ startManual, stopManual, mode, setMode }) {
+export default function ManualControlPad({ startManual, stopManual, mode, handleModeChange }) {
   const manualEnabled = mode === 'MANUAL'
 
   const toggleManual = () => {
     if (manualEnabled) {
       stopManual()
-      setMode('IDLE')
+      handleModeChange('IDLE')
     } else {
-      setMode('MANUAL')
+      handleModeChange('MANUAL')
     }
   }
 

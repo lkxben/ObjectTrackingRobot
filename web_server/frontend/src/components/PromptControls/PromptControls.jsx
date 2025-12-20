@@ -1,31 +1,34 @@
-import React, { useEffect, useState } from 'react'
-import './PromptControls.css'
+import React, { useEffect, useState } from 'react';
+import './PromptControls.css';
 
-function PromptControls({ prompt, setPrompt, onSubmit, onReset }) {
-  const [inputValue, setInputValue] = useState('')
+function PromptControls({ prompt, onSubmit, onReset }) {
+  const [inputValue, setInputValue] = useState('');
+  const [applied, setApplied] = useState(false);
 
-  // Keep input in sync with external prompt reset
+  // Keep input in sync if prompt is externally reset
   useEffect(() => {
-    if (prompt === '') setInputValue('')
-  }, [prompt])
-
-  const applied = prompt !== ''
+    if (prompt === '') {
+      setInputValue('');
+      setApplied(false);
+    }
+  }, [prompt]);
 
   const handleButton = () => {
-    const trimmed = inputValue.trim()
+    const trimmed = inputValue.trim();
+
     if (!applied && trimmed !== '') {
-      setPrompt(trimmed)
-      onSubmit()
-    } else {
-      onReset()
-      setPrompt('')
-      setInputValue('')
+      onSubmit(trimmed);
+      setApplied(true);
+    } else if (applied) {
+      onReset();
+      setInputValue('');
+      setApplied(false);
     }
-  }
+  };
 
   const handleKeyDown = (e) => {
-    if (e.key === 'Enter') handleButton()
-  }
+    if (e.key === 'Enter') handleButton();
+  };
 
   return (
     <div className="prompt-inputs">
@@ -42,7 +45,7 @@ function PromptControls({ prompt, setPrompt, onSubmit, onReset }) {
         </button>
       </div>
     </div>
-  )
+  );
 }
 
-export default PromptControls
+export default PromptControls;

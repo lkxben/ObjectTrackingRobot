@@ -37,17 +37,16 @@ function App() {
 
   const handleModeChange = (newMode) => {
     setMode(newMode);
-    setPrompt('');
     setTargetId('');
-    clearLogs();
     if (newMode !== 'AUTO') {
-      sendInput({ mode: newMode, clearPrompt: true, clearTarget: true });
+      sendInput({ mode: newMode, clearTarget: true });
     }
   };
 
-  const handlePromptSubmit = () => {
-    if (!prompt.trim()) return;
-    sendInput({ prompt: prompt });
+  const handlePromptSubmit = (promptValue) => {
+    if (!promptValue.trim()) return;
+    setPrompt(promptValue);
+    sendInput({ prompt: promptValue });
   };
 
   const handlePromptReset = () => {
@@ -56,10 +55,11 @@ function App() {
     sendInput({ clearPrompt: true, clearTarget: true });
   };
 
-  const handleTargetIdSubmit = () => {
-    const value = Number(targetId.trim())
+  const handleTargetIdSubmit = (targetValue) => {
+    const value = Number(targetValue.trim())
     if (!Number.isInteger(value)) return;
-    sendInput({ targetId: value })
+    setTargetId(value);
+    sendInput({ targetId: value });
   }
 
   const handleTargetIdClear = () => {
@@ -86,10 +86,8 @@ function App() {
       bottomLeft={
         <ControlsPanel
           mode={mode}
-          setMode={setMode}
           handleModeChange={handleModeChange}
           prompt={prompt}
-          setPrompt={setPrompt}
           targetId={targetId}
           setTargetId={setTargetId}
           autoTrackEnabled={autoTrackEnabled}
@@ -115,7 +113,7 @@ function App() {
           startManual={startManual}
           stopManual={stopManual}
           mode={mode}
-          setMode={setMode}
+          handleModeChange={handleModeChange}
         />
       }
     />
