@@ -47,7 +47,7 @@
 .log-messages {
   overflow-y: auto;
   flex: 1;
-  background: #0d1117;
+  background: #111;
   border: 1px solid #30363d;
   padding: 8px;
   border-radius: 8px;
