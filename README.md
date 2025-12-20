@@ -1,4 +1,4 @@
-# PiSentinel
+# PiSentinel - ROS2, YOLO, React
 
 **Real-time object tracking turret controlled via a web dashboard**
 
@@ -21,7 +21,7 @@ This project is a **Raspberry Pi 5-powered camera turret** capable of tracking o
 - **Backend / Robot:** ROS2 (Humble), Python nodes, Linux
 - **Computer Vision:** Ultralytics YOLOE, OpenCV, MOT/SOT pipelines  
 - **Hardware:** Raspberry Pi 5, Pi Camera Module 2, SG90 servos, ESP32
-- **Deployment:** Fully containerized and run on Raspberry Pi OS  
+- **Deployment:** Fully containerized with Docker and run on Raspberry Pi OS  
 
 ## Node Architecture
 
