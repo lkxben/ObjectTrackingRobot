@@ -44,5 +44,7 @@ This project is a **Raspberry Pi 5-powered camera turret** capable of tracking o
 
 ## Screenshots
 
+Live demo: [View Live Demo](https://pisentinel.onrender.com/)
+
 ![Dashboard view](assets/dashboard.png)
 
