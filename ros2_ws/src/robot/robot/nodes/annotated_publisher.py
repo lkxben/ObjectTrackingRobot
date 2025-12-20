@@ -1,7 +1,7 @@
 import rclpy
 from rclpy.node import Node
 from sensor_msgs.msg import Image, CompressedImage
-from std_msgs.msg import Empty
+from std_msgs.msg import Empty, Bool
 from cv_bridge import CvBridge
 from robot_msgs.msg import DetectionArray, TurretState
 import cv2

@@ -1,11 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import './PromptControls.css';
 
-function PromptControls({ prompt, onSubmit, onReset }) {
+function PromptControls({ prompt, onSubmit, onReset, annotated }) {
   const [inputValue, setInputValue] = useState('');
   const [applied, setApplied] = useState(false);
 
-  // Keep input in sync if prompt is externally reset
   useEffect(() => {
     if (prompt === '') {
       setInputValue('');
@@ -15,7 +14,6 @@ function PromptControls({ prompt, onSubmit, onReset }) {
 
   const handleButton = () => {
     const trimmed = inputValue.trim();
-
     if (!applied && trimmed !== '') {
       onSubmit(trimmed);
       setApplied(true);
@@ -31,7 +29,9 @@ function PromptControls({ prompt, onSubmit, onReset }) {
   };
 
   return (
-    <div className="prompt-inputs">
+    <div
+      className={`prompt-inputs ${annotated ? '' : 'hidden'}`}
+    >
       <div className="input-wrapper">
         <input
           type="text"

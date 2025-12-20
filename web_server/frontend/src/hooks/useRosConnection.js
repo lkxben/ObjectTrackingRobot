@@ -7,6 +7,7 @@ export default function useRosConnection(url = 'wss://objecttrackingrobot.onrend
   const inputTopicRef = useRef(null);
   const logTopicRef = useRef(null);
   const manualTopicRef = useRef(null);
+  const annotatedTopicRef = useRef(null);
 
   useEffect(() => {
     const ros = new ROSLIB.Ros({ url });
@@ -42,6 +43,12 @@ export default function useRosConnection(url = 'wss://objecttrackingrobot.onrend
       messageType: 'std_msgs/Empty',
     });
 
+    annotatedTopicRef.current = new ROSLIB.Topic({
+      ros,
+      name: '/annotated',
+      messageType: 'std_msgs/Bool',
+    });
+
     const interval = setInterval(() => heartbeatTopic.publish(new ROSLIB.Message({})), 30000);
 
     return () => clearInterval(interval);
@@ -53,5 +60,6 @@ export default function useRosConnection(url = 'wss://objecttrackingrobot.onrend
     inputTopicRef,
     logTopicRef,
     manualTopicRef,
+    annotatedTopicRef
   };
 }

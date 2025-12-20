@@ -24,3 +24,43 @@
   gap: 12px;
   overflow-y: auto;
 }
+
+/* prompt row layout */
+.prompt-row {
+  padding-top: 4px;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+/* Toggle button wrapper */
+.toggle-annotation-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #414345;
+  border-radius: 8px;
+  height: 36px;
+  box-sizing: border-box;
+}
+
+/* Toggle button itself */
+.toggle-annotation-btn {
+  padding: 0 8px;
+  height: 24px;
+  border: none;
+  border-radius: 6px;
+  background-color: #f0995c;
+  color: black;
+  font-weight: normal;
+  cursor: pointer;
+  transition: background-color 0.2s ease, transform 0.1s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 80px;
+}
+
+.toggle-annotation-btn:hover {
+  background-color: #e68b50;
+}

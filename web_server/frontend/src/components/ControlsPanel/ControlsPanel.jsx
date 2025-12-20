@@ -10,6 +10,7 @@ export default function ControlsPanel({
   handleModeChange,
   prompt,
   targetId,
+  annotated,
   setTargetId,
   autoTrackEnabled,
   setAutoTrackEnabled,
@@ -17,7 +18,8 @@ export default function ControlsPanel({
   handlePromptSubmit,
   handlePromptReset,
   handleTargetIdSubmit,
-  handleTargetIdClear
+  handleTargetIdClear,
+  toggleAnnotation
 }) {
   return (
     <div className="controls-root">
@@ -25,12 +27,25 @@ export default function ControlsPanel({
         <ModeSelector mode={mode} onChange={handleModeChange} />
       </div>
 
-      <div className="controls-main">
-        <PromptControls
-          prompt={prompt}
-          onSubmit={handlePromptSubmit}
-          onReset={handlePromptReset}
-        />
+     <div className="controls-main">
+        <div className="prompt-row">
+          <div className="toggle-annotation-wrapper">
+            <button
+              className="toggle-annotation-btn"
+              onClick={toggleAnnotation}
+              title={annotated ? "Hide annotations" : "Show annotations"}
+            >
+              { annotated ? "Unannotate" : "Annotate" }
+            </button>
+          </div>
+
+          <PromptControls
+            prompt={prompt}
+            onSubmit={handlePromptSubmit}
+            onReset={handlePromptReset}
+            annotated={annotated}
+          />
+        </div>
 
         {['AUTO_LOG', 'AUTO_TRACK', 'AUTO'].includes(mode) && (
           <AutoControls

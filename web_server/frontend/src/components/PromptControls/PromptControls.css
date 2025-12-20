@@ -32,6 +32,7 @@
 }
 
 .prompt-btn {
+  height: 24px;
   padding: 4px 10px;
   border: none;
   border-radius: 6px;
@@ -44,4 +45,8 @@
 
 .prompt-btn:hover {
   background-color: #e68b50;
+}
+
+.hidden {
+  visibility: hidden;
 }

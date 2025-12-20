@@ -17,6 +17,7 @@ function App() {
   const [mode, setMode] = useState('IDLE');
   const [prompt, setPrompt] = useState('');
   const [targetId, setTargetId] = useState('');
+  const [annotated, setAnnotated] = useState(true);
   const [filterLevel, setFilterLevel] = useState('info');
   const [autoTrackEnabled, setAutoTrackEnabled] = useState(false);
 
@@ -29,7 +30,7 @@ function App() {
     error: 4,
   };
 
-  const { rosRef, cameraTopicRef, inputTopicRef, logTopicRef, manualTopicRef } = useRosConnection();
+  const { rosRef, cameraTopicRef, inputTopicRef, logTopicRef, manualTopicRef, annotatedTopicRef } = useRosConnection();
   const { fps, streamActive } = useCameraStream(cameraTopicRef, imgRef);
   const { filteredLogs, clearLogs } = useEventLogs(logTopicRef, severityRank, filterLevel);
   const { startManual, stopManual } = useManualControl(manualTopicRef, streamActive, mode);
@@ -67,6 +68,11 @@ function App() {
     sendInput({ clearTarget: true });
   }
 
+  const toggleAnnotation = () => {
+    annotatedTopicRef.current.publish({data : !annotated});
+    setAnnotated(prev => !prev);
+  }
+
   const handleAutoStart = () => {
     const modeToSend = autoTrackEnabled ? 'AUTO_TRACK' : 'AUTO_LOG';
     setMode(modeToSend);
@@ -89,6 +95,7 @@ function App() {
           handleModeChange={handleModeChange}
           prompt={prompt}
           targetId={targetId}
+          annotated={annotated}
           setTargetId={setTargetId}
           autoTrackEnabled={autoTrackEnabled}
           setAutoTrackEnabled={setAutoTrackEnabled}
@@ -97,6 +104,7 @@ function App() {
           handlePromptReset={handlePromptReset}
           handleTargetIdSubmit={handleTargetIdSubmit}
           handleTargetIdClear={handleTargetIdClear}
+          toggleAnnotation={toggleAnnotation}
         />
       }
 
